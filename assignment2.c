@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 #include <avr/io.h> 
 #include <avr/interrupt.h>
@@ -21,6 +22,7 @@
 #include "game_screens.h"
 #include "controller.h"
 #include "levels.h"
+#include "movement.h"
 
 bool paused = false;
 bool main_menu_enabled = false;
@@ -29,6 +31,8 @@ bool game_running = false;
 int player_lives = 3;
 int current_floor = 0;
 int player_score = 0;
+
+bool hasKey;
 
 void show_game_screen( void ) {
 
@@ -39,8 +43,7 @@ void show_pause_screen( void ) {
 
 	draw_pause_screen(current_floor, player_lives, player_score);
 
-	show_screen();
-	paused = false;
+	show_screen(); 
 }
 
 void show_main_menu( void ) {
@@ -78,6 +81,7 @@ void show_main_menu( void ) {
 }
 
 void setup( void ) {
+	//sendLine("Running Setup");
 	// SET CLOCK SPEED
 	set_clock_speed(CPU_8MHz);
 
@@ -107,6 +111,7 @@ void setup( void ) {
 	show_screen();
 
 	main_menu_enabled = true;
+	//sendLine("Setup Complete");
 }
 
 void process( void ) {
@@ -116,24 +121,23 @@ void process( void ) {
 		paused = true;
 	}
 	
-	//paused = false;
-	
-
-	if (joyDown_pressed()) {
-		player.y++;
+	paused = false;
+	if (collision(player, key)) {
+		hasKey = true;
 	}
-	if (joyUp_pressed()) {
-		player.y--;
+	movement(current_floor, hasKey);
+
+	if (paused == false) {
+		clear_screen();
+		draw_level(current_floor);
+		show_screen();
 	}
 
-	clear_screen();
-	draw_level(current_floor);
-	show_screen();
 	
-
 }
 
 int main ( void ) {
+	setup_usb_serial();
 
 	setup();
 
