@@ -9,32 +9,50 @@
 #include "bitmaps.h"
 
 bool nearBottom (void) {
-	if (boarder_bottom.y == LCD_Y - 2) {
+	if (boarder_bottom.y == LCD_Y - 2 && joyDown_pressed()) {
 		return true;
 	}
 	return false;
 }
 
 bool nearTop( void ) {
-	if (boarder_top.y + wall_t_bHeightPixels == 2) {
+	if (boarder_top.y + wall_t_bHeightPixels == 2 && joyUp_pressed()) {
 		return true;
 	}
 	return false;
 }
 
 bool nearLeft ( void ) {
-	if (boarder_left.x + wall_l_rWidthPixels == 2) {
+	if (boarder_left.x + wall_l_rWidthPixels == 2 && joyLeft_pressed()) {
 		return true;
 	}
 	return false;
 }
 
 bool nearRight ( void ) {
-	if (boarder_right.x == LCD_X - 2 ) {
+	if (boarder_right.x == LCD_X - 2 && joyRight_pressed()) {
 		return true;
 	}
 	return false;
 
+}
+
+
+void monster_movement(Sprite monster) {
+	if (monster_visble(monster)) {
+		if (monster.x < player.x) {
+			monster.x++;
+		}
+		if (monster.x > player.x) {
+			monster.x--;
+		}
+		if (monster.y < player.y) {
+			monster.y++;
+		}
+		if (monster.y > player.y) {
+			monster.y--;
+		}
+	}
 }
 
 void movement( int level, bool hasKey ) {
@@ -43,11 +61,19 @@ void movement( int level, bool hasKey ) {
 			key.y = (player.y / 2) + (playerHeightPixels + keyHeightPixels - 1);
 			key.x = (player.x / 2);
 		}
-		if (nearTop()) {
+
+		if (nearTop() || nearBottom()) {
 			
 			player.y--;
 
+		}
+
+		if (player.y != LCD_Y / 2) {
+
+			player.y--;
+
 		} else {
+
 			key.y++;
 			door.y++;
 
@@ -69,8 +95,13 @@ void movement( int level, bool hasKey ) {
 			key.x = (player.x / 2);
     	}
 
-		if (nearBottom()) {
+		if (nearBottom() || nearTop()) {
 			
+			player.y++;
+
+		} 
+		if (player.y != LCD_Y / 2) {
+
 			player.y++;
 
 		} else {
@@ -94,7 +125,12 @@ void movement( int level, bool hasKey ) {
 			key.x = (player.x / 2) + playerWidthPixels;
     	}
 
-		if (nearLeft()) {
+		if (nearLeft() || nearRight()) {
+			
+			player.x--;
+
+		} 
+		if ( player.x != (LCD_X / 2) - playerWidthPixels / 2) {
 			
 			player.x--;
 
@@ -120,8 +156,13 @@ void movement( int level, bool hasKey ) {
 			key.x = (player.x / 2) - (playerWidthPixels + keyWidthPixels);
 		}
 
-		if (nearRight()) {
+		if (nearRight() || nearRight()) {
 			
+			player.x++;
+
+		} 
+		if ( player.x != (LCD_X / 2) - playerWidthPixels / 2) {
+
 			player.x++;
 
 		} else {

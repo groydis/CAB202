@@ -115,23 +115,17 @@ void setup( void ) {
 }
 
 void process( void ) {
-	draw_level(current_floor);
+	clear_screen();
 
-	if (BIT_IS_SET(PINB, 0)) {
-		paused = true;
-	}
-	
-	paused = false;
+
 	if (collision(player, key)) {
 		hasKey = true;
 	}
+	monster_movement(monster);
 	movement(current_floor, hasKey);
 
-	if (paused == false) {
-		clear_screen();
-		draw_level(current_floor);
-		show_screen();
-	}
+	draw_level(current_floor);
+	show_screen();
 
 	
 }

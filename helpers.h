@@ -7,10 +7,9 @@
 #include <string.h>
 
 #include <graphics.h>
-
-#include <graphics.h>
 #include <sprite.h>
 #include "usb_serial.h"
+#include "lcd_model.h"
 
 typedef enum { false, true } bool;
 
@@ -19,8 +18,8 @@ char buffer[20];
 char *TestChar = "Test\r\n";
 
 bool collision(Sprite spriteOne, Sprite spriteTwo) {
-	int spriteOne_x = spriteOne.x + 1;
-	int spriteOne_y = spriteOne.y + 1;
+	int spriteOne_x = spriteOne.x;
+	int spriteOne_y = spriteOne.y;
 
 	int spriteTwo_x = spriteTwo.x;
 	int spriteTwo_y = spriteTwo.y;
@@ -47,6 +46,15 @@ bool collision(Sprite spriteOne, Sprite spriteTwo) {
 	}
 
 	return collided;
+}
+
+bool monster_visble(Sprite monster) {
+	if (monster.x > 0 && monster.x < LCD_X) {
+		if (monster.y > 0 && monster.y < LCD_Y) {
+			return true;
+		}
+	}
+	return false;
 }
 
 void draw_double(uint8_t x, uint8_t y, double time, double minutes, colour_t colour) {
