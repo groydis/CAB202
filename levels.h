@@ -66,11 +66,11 @@ void setup_tower(void) {
 
 void setup_top_wall( void ) {
 	int x = -21;
-	int y = -36;
+	int y = -12;
 	sprite_init(&boarder_top, x, y, wall_t_bWidthPixels, wall_t_bHeightPixels, wall_t_bBitmaps);
 }
 void setup_left_wall( void ) {
-	int x = -63;
+	int x = -21;
 	int y = -36;
 	sprite_init(&boarder_left, x, y, wall_l_rWidthPixels, wall_l_rHeightPixels, wall_l_rBitmaps);
 }
@@ -101,15 +101,17 @@ void load_level(int level) {
 
 void draw_level(int level) {
 	if (level == 0) {
-		sprite_draw(&monster);
-	    sprite_draw(&key);
+
 	    sprite_draw(&tower);
 	    sprite_draw(&door);
-	    sprite_draw(&player);
 	    sprite_draw(&boarder_top);
 	    sprite_draw(&boarder_left);
 	    sprite_draw(&boarder_right);
 	    sprite_draw(&boarder_bottom);
+
+	   	sprite_draw(&player);
+	    sprite_draw(&monster);
+	    sprite_draw(&key);
 	}
 }
 

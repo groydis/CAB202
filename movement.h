@@ -39,27 +39,44 @@ bool nearRight ( void ) {
 
 
 void monster_movement(Sprite monster) {
-	if (monster_visble(monster)) {
-		if (monster.x < player.x) {
-			monster.x++;
-		}
-		if (monster.x > player.x) {
-			monster.x--;
-		}
-		if (monster.y < player.y) {
-			monster.y++;
-		}
-		if (monster.y > player.y) {
-			monster.y--;
-		}
-	}
+//	if (monster_visble(monster)) {
+//        if (monster.x < player.x){
+//            monster.x += 0.1;
+//        }
+//        if (monster.x > player.x){
+//            monster.x -= 0.1;
+//        }
+//        if (monster.y < player.y){
+//            monster.y += 0.1;
+//        }
+//        if (monster.y > player.y){
+//            monster.y -= 0.1;
+//        }
+//    }
+
+    if (monster.x <= 83 && monster.x >= 0){
+        if (monster.y <= 47 && monster.y >= 0){
+            if (monster.x < player.x){
+                monster.x += 0.1;
+            }
+            if (monster.x > player.x){
+                monster.x -= 0.1;
+            }
+            if (monster.y < player.y){
+                monster.y += 0.1;
+            }
+            if (monster.y > player.y){
+                monster.y -= 0.1;
+            }
+        }
+    }
 }
 
 void movement( int level, bool hasKey ) {
 	if (joyUp_pressed() && collision(player, boarder_top) == false) {
 		if (hasKey) {
-			key.y = (player.y / 2) + (playerHeightPixels + keyHeightPixels - 1);
-			key.x = (player.x / 2);
+			key.y = player.y + player.height;
+			key.x = player.x - key.width;
 		}
 
 		if (nearTop() || nearBottom()) {
@@ -73,8 +90,12 @@ void movement( int level, bool hasKey ) {
 			player.y--;
 
 		} else {
-
-			key.y++;
+			if (hasKey) {
+				key.y = player.y + player.height;
+				key.x = player.x - key.width;
+			} else {
+				key.y++;
+			}
 			door.y++;
 
 			boarder_top.y++;
@@ -83,17 +104,16 @@ void movement( int level, bool hasKey ) {
 			boarder_bottom.y++;
 
 			if (level == 0) {
-		    	monster.y++;
+				if (monster_visble(monster)) {
+
+				} else {
+		    		monster.y++;
+				}
 		    	tower.y++;
 			}
 		}
 	}
 	else if (joyDown_pressed() && collision(player, boarder_bottom) == false) {
-
-		if (hasKey) {
-			key.y = (player.y / 2) - (keyHeightPixels + 2);
-			key.x = (player.x / 2);
-    	}
 
 		if (nearBottom() || nearTop()) {
 			
@@ -105,7 +125,12 @@ void movement( int level, bool hasKey ) {
 			player.y++;
 
 		} else {
-			key.y--;
+			if (hasKey) {
+				key.y = player.y + player.height;
+				key.x = player.x - key.width;
+			} else {
+				key.y--;
+			}
 	    	door.y--;
 
 			boarder_top.y--;
@@ -114,16 +139,16 @@ void movement( int level, bool hasKey ) {
 			boarder_bottom.y--;
 
 			if (level == 0) {
-		    	monster.y--;
+				if (monster_visble(monster)) {
+
+				} else {
+		    		monster.y--;
+				}
 		    	tower.y--;
 			}
 		}
 	}
 	else if (joyLeft_pressed() && collision(player, boarder_left) == false) {
-		if (hasKey) {
-			key.y = (player.y / 2);
-			key.x = (player.x / 2) + playerWidthPixels;
-    	}
 
 		if (nearLeft() || nearRight()) {
 			
@@ -135,7 +160,12 @@ void movement( int level, bool hasKey ) {
 			player.x--;
 
 		} else {
-			key.x++;
+			if (hasKey) {
+				key.y = player.y + player.height;
+				key.x = player.x - key.width;
+			} else {
+				key.x++;
+			}
 			door.x++;
 
 			boarder_top.x++;
@@ -144,17 +174,17 @@ void movement( int level, bool hasKey ) {
 			boarder_bottom.x++;
 
 			if (level == 0) {
-		    	monster.x++;
+				if (monster_visble(monster)) {
+
+				} else {
+		    		monster.x++;
+		    	}
 		    	tower.x++;
 			}
 		}
 	}
 
 	else if (joyRight_pressed() && collision(player, boarder_right) == false) {
-		if (hasKey) {
-			key.y = (player.y / 2);
-			key.x = (player.x / 2) - (playerWidthPixels + keyWidthPixels);
-		}
 
 		if (nearRight() || nearRight()) {
 			
@@ -166,7 +196,12 @@ void movement( int level, bool hasKey ) {
 			player.x++;
 
 		} else {
-			key.x--;
+			if (hasKey) {
+				key.y = player.y + player.height;
+				key.x = player.x - key.width;
+			} else {
+				key.x--;
+			}
 	    	door.x--;
 
 			boarder_top.x--;
@@ -175,7 +210,11 @@ void movement( int level, bool hasKey ) {
 			boarder_bottom.x--;
 
 			if (level == 0) {
-		    	monster.x--;
+				if (monster_visble(monster)) {
+
+				} else {
+		    		monster.x--;
+				}
 		    	tower.x--;
 			}
 		}

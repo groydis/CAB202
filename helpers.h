@@ -49,8 +49,8 @@ bool collision(Sprite spriteOne, Sprite spriteTwo) {
 }
 
 bool monster_visble(Sprite monster) {
-	if (monster.x > 0 && monster.x < LCD_X) {
-		if (monster.y > 0 && monster.y < LCD_Y) {
+	if (monster.x <= 83 && monster.x >= 0) {
+		if (monster.y <= 47 && monster.y >= 0) {
 			return true;
 		}
 	}
