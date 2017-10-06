@@ -26,6 +26,7 @@
 //bool paused = false;
 bool main_menu_enabled = false;
 bool game_running = false;
+bool loading = false;
 
 int player_lives = 3;
 int current_floor = 0;
@@ -36,18 +37,30 @@ bool hasKey = false;
 void show_game_screen( void ) {
 
 }
+
 bool paused ( void ) {
 	if (BIT_IS_SET(PINB, 0)) {
 		return true;
 	}
 	return false;
 }
+
 void show_pause_screen( void ) {
 	clear_screen();
 
 	draw_pause_screen(current_floor, player_lives, player_score);
 
 	show_screen(); 
+}
+
+void show_loading_screen( void ) {
+	clear_screen();
+	current_floor++;
+	draw_loading_screen(current_floor, player_score);
+	show_screen();
+	load_level(current_floor);
+	_delay_ms(1000);
+	loading = false;
 }
 
 void show_main_menu( void ) {
@@ -117,32 +130,14 @@ void setup( void ) {
 
 void process( void ) {
 	clear_screen();
-	// Move Monster
-	if (monster.x <= LCD_X && monster.x >= 0){
-        if (monster.y <= LCD_Y && monster.y >= 0){
-            if (monster.x < player.x){
-                monster.x += 0.1;
-            }
-            if (monster.x > player.x){
-                monster.x -= 0.1;
-            }
-            if (monster.y < player.y){
-                monster.y += 0.1;
-            }
-            if (monster.y > player.y){
-                monster.y -= 0.1;
-            }
-        }
-    }
-    // Check if collided with key
+
     if (collision(player, key)) {
     	hasKey = true;
     }
     if (collision(player, door) && hasKey) {
-    	// WOO NOTHING HAPPENS CAUSE I HAVEN'T DONE THIS YET
-    }
-    movement(current_floor, hasKey);
-	draw_level(current_floor);
+		loading = true;
+	}
+	move_sprites(current_floor, hasKey);
 	show_screen();
 }
 
@@ -159,6 +154,8 @@ int main ( void ) {
 		timer();
 		if (paused()) {
 			show_pause_screen();
+		} else if (loading == true) {
+			show_loading_screen();
 		} else {
 			process();
 			_delay_ms(100);

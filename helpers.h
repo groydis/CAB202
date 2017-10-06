@@ -32,22 +32,25 @@ bool collision(Sprite spriteOne, Sprite spriteTwo) {
 	int spriteTwo_w = spriteTwo.width;
 	int spriteTwo_h = spriteTwo.height;
 
-	int collided = true;
+	if (spriteTwo.is_visible && spriteOne.is_visible) {
+		bool collided = true;
 
-	if ( spriteTwo_x >= spriteOne_x + spriteOne_w ) {
-		collided = false; 
-	}
-	if ( spriteTwo_y >= spriteOne_y + spriteOne_h  ) {
-		collided = false;
-	}
-	if ( spriteOne_x >= spriteTwo_x + spriteTwo_w ) {
-		collided = false;
-	}
-	if ( spriteOne_y >= spriteTwo_y + spriteTwo_h ) {
-		collided = false;
+		if ( spriteTwo_x >= spriteOne_x + spriteOne_w ) {
+			collided = false; 
+		}
+		if ( spriteTwo_y >= spriteOne_y + spriteOne_h  ) {
+			collided = false;
+		}
+		if ( spriteOne_x >= spriteTwo_x + spriteTwo_w ) {
+			collided = false;
+		}
+		if ( spriteOne_y >= spriteTwo_y + spriteTwo_h ) {
+			collided = false;
+		}
+		return collided;
 	}
 
-	return collided;
+	return false;
 }
 
 bool monster_visble(Sprite monster) {

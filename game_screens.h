@@ -14,7 +14,7 @@ char *flr_msg = "Floor: %02d";
 char *lives_msg = "Lives: %02d";
 char *score_msg = "Score: %02d";
 
-void draw_boarder() {
+void draw_border() {
 	for (int h = 0; h < 48; h++){
 		set_pixel(0,h,FG_COLOUR);\
 		set_pixel(1,h,FG_COLOUR);
@@ -31,7 +31,7 @@ void draw_boarder() {
 
 void draw_main_menu(char *countdown, int countdown_x_pos) {
 	
-	draw_boarder();
+	draw_border();
 
     draw_string(17, 2, "ANSI-TOWER", FG_COLOUR);
     draw_string(8, LCD_Y / 4 + 2, "Greyden Scott", FG_COLOUR);
@@ -41,7 +41,7 @@ void draw_main_menu(char *countdown, int countdown_x_pos) {
 
 void draw_pause_screen(int current_floor, int player_lives, int player_score) {
 
-	draw_boarder();
+	draw_border();
 
 	sprintf(flr_msg, "Floor: %d", current_floor);
 	sprintf(lives_msg, "Lives: %d", player_lives);
@@ -56,6 +56,16 @@ void draw_pause_screen(int current_floor, int player_lives, int player_score) {
 	drawCentred(LCD_Y / 5 * 4 + 2, lives_msg);
 
 }
+
+void draw_loading_screen(int current_floor, int player_score) {
+	draw_border();
+	sprintf(score_msg, "Score: %d", player_score);
+	sprintf(flr_msg, "Floor: %d", current_floor);
+
+	drawCentred(5, "L O A D I N G");
+	drawCentred(15, score_msg);
+	drawCentred(25, flr_msg);
+} 
 
 
 
