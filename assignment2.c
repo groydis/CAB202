@@ -1,7 +1,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <math.h>
 #include <string.h>
 
@@ -16,15 +15,15 @@
 #include <sprite.h>
 
 #include "helpers.h"
+#include "game_screens.h"
 #include "timer.h"
 #include "lcd_model.h"
-#include "usb_serial.h"
-#include "game_screens.h"
 #include "controller.h"
-#include "levels.h"
 #include "movement.h"
+#include "levels.h"
 
-bool paused = false;
+
+//bool paused = false;
 bool main_menu_enabled = false;
 bool game_running = false;
 
@@ -32,12 +31,17 @@ int player_lives = 3;
 int current_floor = 0;
 int player_score = 0;
 
-bool hasKey;
+bool hasKey = false;
 
 void show_game_screen( void ) {
 
 }
-
+bool paused ( void ) {
+	if (BIT_IS_SET(PINB, 0)) {
+		return true;
+	}
+	return false;
+}
 void show_pause_screen( void ) {
 	clear_screen();
 
@@ -81,7 +85,6 @@ void show_main_menu( void ) {
 }
 
 void setup( void ) {
-	//sendLine("Running Setup");
 	// SET CLOCK SPEED
 	set_clock_speed(CPU_8MHz);
 
@@ -104,30 +107,43 @@ void setup( void ) {
 	sei();
 	
 	// Initialise the USB serial
-    usb_init();
 
 	clear_screen();
 
 	show_screen();
 
 	main_menu_enabled = true;
-	//sendLine("Setup Complete");
 }
 
 void process( void ) {
 	clear_screen();
-
-
-	if (collision(player, key)) {
-		hasKey = true;
-	}
-	monster_movement(monster);
-	movement(current_floor, hasKey);
-
+	// Move Monster
+	if (monster.x <= LCD_X && monster.x >= 0){
+        if (monster.y <= LCD_Y && monster.y >= 0){
+            if (monster.x < player.x){
+                monster.x += 0.1;
+            }
+            if (monster.x > player.x){
+                monster.x -= 0.1;
+            }
+            if (monster.y < player.y){
+                monster.y += 0.1;
+            }
+            if (monster.y > player.y){
+                monster.y -= 0.1;
+            }
+        }
+    }
+    // Check if collided with key
+    if (collision(player, key)) {
+    	hasKey = true;
+    }
+    if (collision(player, door) && hasKey) {
+    	// WOO NOTHING HAPPENS CAUSE I HAVEN'T DONE THIS YET
+    }
+    movement(current_floor, hasKey);
 	draw_level(current_floor);
 	show_screen();
-
-	
 }
 
 int main ( void ) {
@@ -141,11 +157,11 @@ int main ( void ) {
 
 	while (game_running) {
 		timer();
-		if (paused) {
+		if (paused()) {
 			show_pause_screen();
 		} else {
 			process();
-			_delay_ms(10);
+			_delay_ms(100);
 		}
 	}
 

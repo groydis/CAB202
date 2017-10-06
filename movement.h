@@ -38,40 +38,6 @@ bool nearRight ( void ) {
 }
 
 
-void monster_movement(Sprite monster) {
-//	if (monster_visble(monster)) {
-//        if (monster.x < player.x){
-//            monster.x += 0.1;
-//        }
-//        if (monster.x > player.x){
-//            monster.x -= 0.1;
-//        }
-//        if (monster.y < player.y){
-//            monster.y += 0.1;
-//        }
-//        if (monster.y > player.y){
-//            monster.y -= 0.1;
-//        }
-//    }
-
-    if (monster.x <= 83 && monster.x >= 0){
-        if (monster.y <= 47 && monster.y >= 0){
-            if (monster.x < player.x){
-                monster.x += 0.1;
-            }
-            if (monster.x > player.x){
-                monster.x -= 0.1;
-            }
-            if (monster.y < player.y){
-                monster.y += 0.1;
-            }
-            if (monster.y > player.y){
-                monster.y -= 0.1;
-            }
-        }
-    }
-}
-
 void movement( int level, bool hasKey ) {
 	if (joyUp_pressed() && collision(player, boarder_top) == false) {
 		if (hasKey) {
@@ -104,11 +70,7 @@ void movement( int level, bool hasKey ) {
 			boarder_bottom.y++;
 
 			if (level == 0) {
-				if (monster_visble(monster)) {
-
-				} else {
-		    		monster.y++;
-				}
+		    	monster.y++;
 		    	tower.y++;
 			}
 		}
@@ -139,11 +101,7 @@ void movement( int level, bool hasKey ) {
 			boarder_bottom.y--;
 
 			if (level == 0) {
-				if (monster_visble(monster)) {
-
-				} else {
-		    		monster.y--;
-				}
+		    	monster.y--;
 		    	tower.y--;
 			}
 		}
@@ -174,11 +132,7 @@ void movement( int level, bool hasKey ) {
 			boarder_bottom.x++;
 
 			if (level == 0) {
-				if (monster_visble(monster)) {
-
-				} else {
-		    		monster.x++;
-		    	}
+		    	monster.x++;
 		    	tower.x++;
 			}
 		}
@@ -210,11 +164,7 @@ void movement( int level, bool hasKey ) {
 			boarder_bottom.x--;
 
 			if (level == 0) {
-				if (monster_visble(monster)) {
-
-				} else {
-		    		monster.x--;
-				}
+		    	monster.x--;
 		    	tower.x--;
 			}
 		}

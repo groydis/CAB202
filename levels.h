@@ -25,9 +25,14 @@ void setup_player(void) {
 	sprite_init(&player, x, y, playerWidthPixels, playerHeightPixels, playerBitmaps);
 }
 
+//void setup_monster(void) {
+//	int x = (LCD_X + 10) - monsterWidthPixels - 2;
+//	int y = (0);
+//	sprite_init(&monster, x, y, monsterWidthPixels, monsterHeightPixels, monsterBitmaps);
+//}
 void setup_monster(void) {
-	int x = (LCD_X + 10) - monsterWidthPixels - 2;
-	int y = (0);
+	int x = (LCD_X) - monsterWidthPixels - 2;
+	int y = (LCD_Y / 2);
 	sprite_init(&monster, x, y, monsterWidthPixels, monsterHeightPixels, monsterBitmaps);
 }
 void setup_key(void) {

@@ -48,12 +48,12 @@ void draw_pause_screen(int current_floor, int player_lives, int player_score) {
 	sprintf(score_msg, "Score: %d", player_score);
 
 
-    draw_string(15, 2, "P A U S E D", FG_COLOUR);
-	draw_string(15,LCD_Y / 5 + 2, flr_msg, FG_COLOUR);
+    drawCentred(2, "P A U S E D");
+	drawCentred(LCD_Y / 5 + 2, flr_msg);
 	display_time(15,LCD_Y / 5 * 2 + 2);
 
-	draw_string(15,LCD_Y / 5 * 3 + 2, score_msg, FG_COLOUR);
-	draw_string(15, LCD_Y / 5 * 4 + 2, lives_msg, FG_COLOUR);
+	drawCentred(LCD_Y / 5 * 3 + 2, score_msg);
+	drawCentred(LCD_Y / 5 * 4 + 2, lives_msg);
 
 }
 

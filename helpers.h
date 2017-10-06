@@ -17,6 +17,8 @@ char buffer[20];
 
 char *TestChar = "Test\r\n";
 
+bool debug = false;
+
 bool collision(Sprite spriteOne, Sprite spriteTwo) {
 	int spriteOne_x = spriteOne.x;
 	int spriteOne_y = spriteOne.y;
@@ -62,6 +64,13 @@ void draw_double(uint8_t x, uint8_t y, double time, double minutes, colour_t col
     draw_string(x, y, buffer, colour);
 }
 
+void drawCentred(unsigned char y, char* string) {
+	unsigned char l = 0, i = 0;
+	while (string[i] != '\0') { l++; i++; }
+	char x = 42-(l*5/2);
+	draw_string((x > 0) ? x : 0, y, string, FG_COLOUR);
+}
+
 void sendLine(char* string) {
     // Send all of the characters in the string
     unsigned char char_count = 0;
@@ -76,6 +85,10 @@ void sendLine(char* string) {
     usb_serial_putchar('\n');
 }
 
+void send_debug_data() {
+
+}
+
 void setup_usb_serial(void) {
 
 	// Set up LCD and display message
@@ -84,9 +97,14 @@ void setup_usb_serial(void) {
 	show_screen();
 
 	usb_init();
-	// || !usb_serial_get_control()
-	while ( !usb_configured()){
-		// Block until USB is ready.
+	if (debug == true) {
+		while ( !usb_configured() || !usb_serial_get_control()){
+			// Block until USB is ready.
+		}
+	} else {
+		while ( !usb_configured()){
+			// Block until USB is ready.
+		}
 	}
 
 	clear_screen();
