@@ -179,10 +179,8 @@ void draw_level(int level) {
 	    sprite_draw(&border_right);
 	    sprite_draw(&border_bottom);
 
-
 	    sprite_draw(&door);
 	    sprite_draw(&player);
-
 	}
 
 }

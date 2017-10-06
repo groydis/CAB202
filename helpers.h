@@ -53,15 +53,6 @@ bool collision(Sprite spriteOne, Sprite spriteTwo) {
 	return false;
 }
 
-bool monster_visble(Sprite monster) {
-	if (monster.x <= 83 && monster.x >= 0) {
-		if (monster.y <= 47 && monster.y >= 0) {
-			return true;
-		}
-	}
-	return false;
-}
-
 void draw_double(uint8_t x, uint8_t y, double time, double minutes, colour_t colour) {
     snprintf(buffer, sizeof(buffer), "Time: %02.0f:%02.0f", minutes, time);
     draw_string(x, y, buffer, colour);
