@@ -48,15 +48,15 @@ Location random_location(Sprite sprite_spawned, int floor) {
 	Location door_floor_2;
 	Location door_floor_3;
 
-	if (floor != 0) {
-		door_floor_0.x = -21 + 4;
-		door_floor_0.y = -12 + 4;
-		door_floor_1.x = LCD_X + 21 - 4 - door.width;
-		door_floor_1.y = -12 + 4;
-		door_floor_2.x = -21 + 4;
-		door_floor_2.y = LCD_Y - 4 - door.height;
-		door_floor_3.x = LCD_X + 21 - 4 - door.width;
-		door_floor_3.y = LCD_Y - 4 - door.height;
+	if (floor > 0) {
+		door_floor_0.x = -21;
+		door_floor_0.y = -12;
+		door_floor_1.x = (LCD_X + 21) - door.width;
+		door_floor_1.y = -12;
+		door_floor_2.x = -21;
+		door_floor_2.y = (LCD_Y - 12) - door.height;
+		door_floor_3.x = (LCD_X + 21) - door.width;
+		door_floor_3.y = (LCD_Y - 12) - door.height;
 
 		Location door_locations[4] = {door_floor_0, door_floor_1, door_floor_2, door_floor_3};
 
@@ -147,7 +147,7 @@ void load_level(int level) {
 		setup_right_wall();
 		setup_bottom_wall();
 	} else {
-		Location door_loc = random_location(door, 1);
+		Location door_loc = random_location(door, level);
 
 		setup_player();
 

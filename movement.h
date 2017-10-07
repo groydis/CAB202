@@ -58,20 +58,14 @@ void monster_movement( Sprite enemy ) {
 
 void movement( int level, bool hasKey ) {
 	if (joyUp_pressed() && collision(player, border_top) == false) {
-		if (hasKey) {
-			key.y = player.y + player.height;
-			key.x = player.x - key.width;
-		}
 
-		if (nearTop() || nearBottom()) {
+		if (nearTop() || nearBottom() || player.y != LCD_Y / 2) {
 			
 			player.y--;
-
-		}
-
-		if (player.y != LCD_Y / 2) {
-
-			player.y--;
+			if (hasKey) {
+				key.y = player.y + player.height;
+				key.x = player.x - key.width;
+			}
 
 		} else {
 			if (hasKey) {
@@ -90,19 +84,20 @@ void movement( int level, bool hasKey ) {
 			if (level == 0) {
 		    	monster.y++;
 		    	tower.y++;
+			} else {
+				door.y++;
 			}
 		}
 	}
 	else if (joyDown_pressed() && collision(player, border_bottom) == false) {
 
-		if (nearBottom() || nearTop()) {
+		if (nearBottom() || nearTop() || player.y != LCD_Y / 2) {
 			
 			player.y++;
-
-		} 
-		if (player.y != LCD_Y / 2) {
-
-			player.y++;
+			if (hasKey) {
+				key.y = player.y + player.height;
+				key.x = player.x - key.width;
+			} 
 
 		} else {
 			if (hasKey) {
@@ -121,19 +116,20 @@ void movement( int level, bool hasKey ) {
 			if (level == 0) {
 		    	monster.y--;
 		    	tower.y--;
+			} else {
+				door.y--;
 			}
 		}
 	}
 	else if (joyLeft_pressed() && collision(player, border_left) == false) {
 
-		if (nearLeft() || nearRight()) {
+		if (nearLeft() || nearRight() || player.x != (LCD_X / 2) - playerWidthPixels / 2) {
 			
 			player.x--;
-
-		} 
-		if ( player.x != (LCD_X / 2) - playerWidthPixels / 2) {
-			
-			player.x--;
+			if (hasKey) {
+				key.y = player.y + player.height;
+				key.x = player.x - key.width;
+			}
 
 		} else {
 			if (hasKey) {
@@ -152,20 +148,21 @@ void movement( int level, bool hasKey ) {
 			if (level == 0) {
 		    	monster.x++;
 		    	tower.x++;
+			} else {
+				door.x++;
 			}
 		}
 	}
 
 	else if (joyRight_pressed() && collision(player, border_right) == false) {
 
-		if (nearRight() || nearRight()) {
+		if (nearRight() || nearRight() || player.x != (LCD_X / 2) - playerWidthPixels / 2 ) {
 			
 			player.x++;
-
-		} 
-		if ( player.x != (LCD_X / 2) - playerWidthPixels / 2) {
-
-			player.x++;
+			if (hasKey) {
+				key.y = player.y + player.height;
+				key.x = player.x - key.width;
+			}
 
 		} else {
 			if (hasKey) {
@@ -184,6 +181,8 @@ void movement( int level, bool hasKey ) {
 			if (level == 0) {
 		    	monster.x--;
 		    	tower.x--;
+			} else {
+				door.x--;
 			}
 		}
 	}
@@ -193,6 +192,8 @@ void move_sprites( int current_floor, bool hasKey ) {
 	if (current_floor == 0) {
 		monster_movement(monster);
     	movement(current_floor, hasKey);
+	} else {
+		movement(current_floor, hasKey);
 	}
 	draw_level(current_floor);
 }
