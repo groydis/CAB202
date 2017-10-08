@@ -11,11 +11,11 @@
 #include <stdint.h>
 
 #if ! defined(LCD_X)
-#define LCD_X 126
+#define LCD_X 84
 #endif
 
 #if ! defined(LCD_Y)
-#define LCD_Y 72
+#define LCD_Y 48
 #endif
 
 typedef enum lcd_op_code_t {

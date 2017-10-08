@@ -32,7 +32,7 @@ int player_lives = 3;
 int current_floor = 0;
 int player_score = 0;
 
-bool hasKey = false;
+bool hasKey = true;
 
 void show_game_screen( void ) {
 
@@ -61,6 +61,7 @@ void show_loading_screen( void ) {
 	load_level(current_floor);
 	_delay_ms(1000);
 	loading = false;
+	hasKey = false;
 }
 
 void show_main_menu( void ) {

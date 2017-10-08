@@ -17,14 +17,14 @@ bool nearBottom (void) {
 }
 
 bool nearTop( void ) {
-	if (border_top.y + wall_t_bHeightPixels == 2 && joyUp_pressed()) {
+	if (border_top.y + border_top.height == 2 && joyUp_pressed()) {
 		return true;
 	}
 	return false;
 }
 
 bool nearLeft ( void ) {
-	if (border_left.x + wall_l_rWidthPixels == 2 && joyLeft_pressed()) {
+	if (border_left.x + border_left.width == 2 && joyLeft_pressed()) {
 		return true;
 	}
 	return false;
@@ -85,7 +85,12 @@ void movement( int level, bool hasKey ) {
 		    	monster.y++;
 		    	tower.y++;
 			} else {
-				door.y++;
+				wall_down_1.y++;
+				wall_down_2.y++;
+				wall_down_3.y++;
+				wall_across_1.y++;
+				wall_across_2.y++;
+				wall_across_3.y++;
 			}
 		}
 	}
@@ -117,7 +122,12 @@ void movement( int level, bool hasKey ) {
 		    	monster.y--;
 		    	tower.y--;
 			} else {
-				door.y--;
+				wall_down_1.y--;
+				wall_down_2.y--;
+				wall_down_3.y--;
+				wall_across_1.y--;
+				wall_across_2.y--;
+				wall_across_3.y--;
 			}
 		}
 	}
@@ -149,7 +159,12 @@ void movement( int level, bool hasKey ) {
 		    	monster.x++;
 		    	tower.x++;
 			} else {
-				door.x++;
+				wall_down_1.x++;
+				wall_down_2.x++;
+				wall_down_3.x++;
+				wall_across_1.x++;
+				wall_across_2.x++;
+				wall_across_3.x++;
 			}
 		}
 	}
@@ -182,7 +197,12 @@ void movement( int level, bool hasKey ) {
 		    	monster.x--;
 		    	tower.x--;
 			} else {
-				door.x--;
+				wall_down_1.x--;
+				wall_down_2.x--;
+				wall_down_3.x--;
+				wall_across_1.x--;
+				wall_across_2.x--;
+				wall_across_3.x--;
 			}
 		}
 	}
