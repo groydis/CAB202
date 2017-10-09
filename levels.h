@@ -38,15 +38,7 @@ typedef struct
 
 int rand_number( int min, int max)
 {
-    const unsigned int range = 1 + max - min;
-    const unsigned int a = RAND_MAX / range;
-    const unsigned int limit = a * range;
-    int s;
-    do{
-        s = rand();
-    } while (s >= limit);
- 
-    return min + (s / a);
+   return rand() % (min - max + 1) + min;
 }
 
 Location random_door_location(int floor) {
@@ -273,6 +265,7 @@ void load_level(int level) {
 		if (collision(wall_across_2, wall_across_3)) {
 			wall_across_2.x = border_left.x + border_left.width;
 			wall_across_3.x = border_right.x - wall_across_2.width;
+			wall_down_3.x = LCD_X;
 		}
 	}
 }
