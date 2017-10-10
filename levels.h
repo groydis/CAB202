@@ -16,6 +16,7 @@ Sprite tower;
 //Sprite shield;
 //Sprite bomb;
 //Sprite bowarrow;
+
 Sprite border_top;
 Sprite border_left;
 Sprite border_right;
@@ -64,7 +65,7 @@ Location random_door_location(int floor) {
 
 		Location door_locations[4] = {door_floor_0, door_floor_1, door_floor_2, door_floor_3};
 
-		return door_locations[rand_number(0,3)];
+		return door_locations[rand_number(0,4)];
 
 	}
 
@@ -95,7 +96,7 @@ Location random_key_location(int floor) {
 
 		Location key_locations[4] = {key_floor_0, key_floor_1, key_floor_2, key_floor_3};
 
-		return key_locations[rand_number(0,3)];
+		return key_locations[rand_number(0,4)];
 
 	}
 
@@ -221,54 +222,87 @@ void load_level(int level) {
 		setup_right_wall();
 		setup_bottom_wall();
 
-		setup_wall_down_1(rand_number(border_left.x + border_left.width + (wall_acrossWidthPixels / 2) + 15, border_right.x - (wall_acrossWidthPixels / 2) - 15),border_top.y + border_top.height);
+		int max_left = border_left.x + border_left.width + 2 + door.width + 2;
+		int max_right = border_right.x - 2 - door.width - 2;
+		int max_top = border_top.y + border_top.height + 2 + door.height + 2;
+		int max_bottom = border_bottom.y - 2 - door.height - 2 - 2;
 
-
-		int wall_1_ax = 0;
-		int wall_1_ay = wall_down_1.y + wall_downHeightPixels;
-
-
-		int wall_2_dx = 0;
-		int wall_2_dy = border_top.y + border_top.height;;
-
-		if (wall_down_1.x > LCD_X / 2) {
-			wall_1_ax = wall_down_1.x - wall_acrossWidthPixels + 3;
-			wall_2_dx = (wall_down_1.x + wall_down_1.width + border_right.x) / 2;
-		} else if (wall_down_1.x <= LCD_X / 2)  {
-			wall_1_ax = wall_down_1.x;
-			wall_2_dx = (border_left.x + border_left.width + wall_down_1.x) / 2;
-			
+		int magical_random_map = rand_number(0, 10);
+		if (magical_random_map == 0) {
+			setup_wall_across_1(border_left.x + border_left.width, max_top);
+			setup_wall_down_1(max_left, wall_across_1.y);
+			setup_wall_across_2(border_right.x - wall_acrossWidthPixels, max_top);
+			setup_wall_down_2(max_right, wall_across_2.y);
+			setup_wall_down_3(LCD_X / 2, border_top.y + border_top.height);
+			setup_wall_across_3(wall_down_1.x, wall_down_1.y + wall_downHeightPixels);
+		} else if (magical_random_map == 1) {
+			setup_wall_across_1(border_left.x + border_left.width, max_bottom);
+			setup_wall_down_1(max_left, wall_across_1.y - wall_downHeightPixels);
+			setup_wall_across_2(border_right.x - wall_acrossWidthPixels, max_top);
+			setup_wall_down_2(max_right, wall_across_2.y);
+			setup_wall_down_3(LCD_X / 2, border_bottom.y - wall_downHeightPixels);
+			setup_wall_across_3(wall_down_1.x, wall_down_1.y);
+		} else if (magical_random_map == 2) {
+			setup_wall_across_1(border_left.x + border_left.width, max_bottom);
+			setup_wall_down_1(max_left, wall_across_1.y - wall_downHeightPixels);
+			setup_wall_across_2(border_right.x - wall_acrossWidthPixels, max_top);
+			setup_wall_down_2(wall_across_2.x, wall_across_2.y);
+			setup_wall_down_3(LCD_X / 2, border_bottom.y - wall_downHeightPixels);
+			setup_wall_across_3(wall_down_1.x, wall_down_1.y);
+		} else if (magical_random_map == 3) {
+			setup_wall_across_1(border_left.x + border_left.width, max_bottom);
+			setup_wall_down_1(max_left, wall_across_1.y - wall_downHeightPixels);
+			setup_wall_across_2(border_right.x - wall_acrossWidthPixels, max_bottom);
+			setup_wall_down_2(wall_across_2.x, wall_across_2.y - wall_downHeightPixels);
+			setup_wall_down_3(LCD_X / 2, border_bottom.y - wall_downHeightPixels);
+			setup_wall_across_3(wall_down_1.x, wall_down_1.y);
+		} else if (magical_random_map == 4) {
+			setup_wall_across_1(border_left.x + border_left.width, max_bottom);
+			setup_wall_down_1(max_left, wall_across_1.y - wall_downHeightPixels);
+			setup_wall_across_2(border_right.x - wall_acrossWidthPixels, max_bottom);
+			setup_wall_down_2(wall_across_2.x, wall_across_2.y - wall_downHeightPixels);
+			setup_wall_down_3(LCD_X / 2, border_bottom.y - wall_downHeightPixels);
+			setup_wall_across_3(wall_down_2.x - wall_acrossWidthPixels, wall_down_2.y);
+		} else if (magical_random_map == 5) {
+			setup_wall_down_1(max_left, border_top.y + border_top.height);
+			setup_wall_across_1(wall_down_1.x, wall_down_1.y + wall_downHeightPixels);
+			setup_wall_down_2(max_left, border_bottom.y - wall_downHeightPixels);
+			setup_wall_across_2(wall_down_2.x, wall_down_2.y);
+			setup_wall_down_3(max_right - wall_downWidthPixels, border_top.y + border_top.height);
+			setup_wall_across_3(border_right.x - wall_acrossWidthPixels, max_bottom);
+		} else if (magical_random_map == 6) {
+			setup_wall_across_1(border_left.x + border_left.width, max_bottom);
+			setup_wall_down_1(max_left, wall_across_1.y - wall_downHeightPixels);
+			setup_wall_across_2(border_right.x - wall_acrossWidthPixels, max_top);
+			setup_wall_down_2(wall_across_1.x + wall_acrossWidthPixels - 3, wall_across_2.y);
+			setup_wall_down_3(LCD_X /2, border_top.y + border_top.height);
+			setup_wall_across_3(border_right.x - wall_acrossWidthPixels, max_bottom);
+		} else if (magical_random_map == 7) {
+			setup_wall_across_1(border_left.x + border_left.width, max_bottom);
+			setup_wall_down_1(LCD_X / 2, border_top.y + border_top.height);
+			setup_wall_across_2(border_right.x - wall_acrossWidthPixels, max_bottom);
+			setup_wall_down_2(wall_across_2.x, wall_across_2.y - wall_downHeightPixels);
+			setup_wall_down_3(max_right, wall_across_2.y - wall_downHeightPixels);
+			setup_wall_across_3(border_left.x + border_left.width, max_top);
+		} else if (magical_random_map == 8) {
+			setup_wall_across_1(border_left.x + border_left.width, max_bottom);
+			setup_wall_down_1(LCD_X / 2, border_bottom.y - wall_downHeightPixels);
+			setup_wall_across_2(border_right.x - wall_acrossWidthPixels, max_top);
+			setup_wall_down_2(wall_across_2.x, wall_across_2.y);
+			setup_wall_down_3(max_right, wall_across_2.y);
+			setup_wall_across_3(border_left.x + border_left.width, max_top);
+		} else if (magical_random_map == 9) {
+			setup_wall_across_1(border_left.x + border_left.width, max_top);
+			setup_wall_down_1(max_left, wall_across_1.y);
+			setup_wall_across_2(border_right.x - wall_acrossWidthPixels, max_top);
+			setup_wall_down_2(wall_across_1.x + wall_acrossWidthPixels - 3, wall_across_2.y);
+			setup_wall_down_3(LCD_X /2, border_top.y + border_top.height);
+			setup_wall_across_3(border_right.x - wall_acrossWidthPixels, max_bottom);
 		}
 
-
-
-		setup_wall_down_2(wall_2_dx, wall_2_dy);
-		
-		setup_wall_across_1(wall_1_ax, wall_1_ay);
-		
-		setup_wall_down_3(rand_number(border_left.x + border_left.width + (wall_acrossWidthPixels / 2) + 15, border_right.x - (wall_acrossWidthPixels / 2) - 15), border_bottom.y - wall_downHeightPixels);
-		setup_wall_across_3( wall_down_3.x - wall_acrossWidthPixels / 2, wall_down_3.y);
-
-		int wall_2_ax = 0;
-		int wall_2_ay = wall_across_3.y;
-
-		if (wall_down_3.x > LCD_X / 2) {
-			wall_2_ax = border_left.x + border_left.width;
-		} else if (wall_down_3.x <= LCD_X / 2) {
-			wall_2_ax = border_right.x - wall_acrossWidthPixels;
-		}
-
-
-
-		setup_wall_across_2(wall_2_ax, wall_2_ay);
-
-		if (collision(wall_across_2, wall_across_3)) {
-			wall_across_2.x = border_left.x + border_left.width;
-			wall_across_3.x = border_right.x - wall_across_2.width;
-			wall_down_3.x = LCD_X;
-		}
 	}
 }
+
 
 void draw_level(int level) {
 	if (level == 0) {

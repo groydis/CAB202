@@ -57,7 +57,7 @@ void monster_movement( Sprite enemy ) {
 
 
 void movement( int level, bool hasKey ) {
-	if (joyUp_pressed() && collision(player, border_top) == false) {
+	if (BIT_IS_SET(PIND, 1) && collision(player, border_top) == false) {
 
 		if (nearTop() || nearBottom() || player.y != LCD_Y / 2) {
 			
@@ -94,7 +94,7 @@ void movement( int level, bool hasKey ) {
 			}
 		}
 	}
-	else if (joyDown_pressed() && collision(player, border_bottom) == false) {
+	else if (BIT_IS_SET(PINB, 7) && collision(player, border_bottom) == false) {
 
 		if (nearBottom() || nearTop() || player.y != LCD_Y / 2) {
 			
@@ -131,7 +131,7 @@ void movement( int level, bool hasKey ) {
 			}
 		}
 	}
-	else if (joyLeft_pressed() && collision(player, border_left) == false) {
+	else if (BIT_IS_SET(PINB, 1)&& collision(player, border_left) == false) {
 
 		if (nearLeft() || nearRight() || player.x != (LCD_X / 2) - playerWidthPixels / 2) {
 			
@@ -169,7 +169,7 @@ void movement( int level, bool hasKey ) {
 		}
 	}
 
-	else if (joyRight_pressed() && collision(player, border_right) == false) {
+	else if (BIT_IS_SET(PIND, 0) && collision(player, border_right) == false) {
 
 		if (nearRight() || nearRight() || player.x != (LCD_X / 2) - playerWidthPixels / 2 ) {
 			

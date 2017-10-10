@@ -33,7 +33,7 @@ void draw_main_menu(char *countdown, int countdown_x_pos) {
 	
 	draw_border();
 
-    draw_string(17, 2, "ANSI-TOWER", FG_COLOUR);
+    draw_string(17, 3, "ANSI-TOWER", FG_COLOUR);
     draw_string(8, LCD_Y / 4 + 2, "Greyden Scott", FG_COLOUR);
     draw_string(19, LCD_Y / 4 * 2 + 2, "N9935924", FG_COLOUR);
     draw_string(countdown_x_pos, LCD_Y / 4 * 3 + 2, countdown, FG_COLOUR);
