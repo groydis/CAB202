@@ -2,12 +2,6 @@
 #define TIMER_H_
 
 #include <stdlib.h>
-#include <math.h>
-#include <graphics.h>
-#include <sprite.h>
-#include <util/delay.h>
-#include "timer.h"
-
 
 #define FREQ (8000000.0)
 #define PRESCALE (1024.0)

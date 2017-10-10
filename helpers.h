@@ -1,15 +1,7 @@
 #ifndef HELPERS_H_
 #define HELPERS_H_
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <math.h>
-#include <string.h>
-
-#include <graphics.h>
-#include <sprite.h>
 #include "usb_serial.h"
-#include "lcd_model.h"
 
 typedef enum { false, true } bool;
 
@@ -77,10 +69,6 @@ void sendLine(char* string) {
     // Go to a new line (force this to be the start of the line)
     usb_serial_putchar('\r');
     usb_serial_putchar('\n');
-}
-
-void send_debug_data() {
-
 }
 
 void setup_usb_serial(void) {

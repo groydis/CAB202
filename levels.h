@@ -2,14 +2,14 @@
 #define LEVELS_H_
 
 #include <sprite.h>
-#include <math.h>
 
 #include "bitmaps.h"
-#include "lcd_model.h"
-#include "helpers.h"
 
 Sprite player;
 Sprite monster;
+Sprite monster1;
+Sprite monster2;
+Sprite monster3;
 Sprite key;
 Sprite door;
 Sprite tower;
@@ -29,6 +29,9 @@ Sprite wall_down_3;
 Sprite wall_across_1;
 Sprite wall_across_2;
 Sprite wall_across_3;
+
+
+bool working_magic;
 
 typedef struct 
 {
@@ -114,6 +117,15 @@ void setup_player(void) {
 
 void setup_monster(int x, int y) {
 	sprite_init(&monster, x, y, monsterWidthPixels, monsterHeightPixels, monsterBitmaps);
+}
+void setup_monster1(int x, int y) {
+	sprite_init(&monster1, x, y, monsterWidthPixels, monsterHeightPixels, monsterBitmaps);
+}
+void setup_monster2(int x, int y) {
+	sprite_init(&monster2, x, y, monsterWidthPixels, monsterHeightPixels, monsterBitmaps);
+}
+void setup_monster3(int x, int y) {
+	sprite_init(&monster3, x, y, monsterWidthPixels, monsterHeightPixels, monsterBitmaps);
 }
 
 void setup_key(int x, int y) {
@@ -209,6 +221,7 @@ void load_level(int level) {
 		setup_right_wall();
 		setup_bottom_wall();
 	} else {
+		working_magic = true;
 		Location door_loc = random_door_location(level);
 		Location key_loc = random_key_location(level);
 
@@ -300,6 +313,10 @@ void load_level(int level) {
 			setup_wall_across_3(border_right.x - wall_acrossWidthPixels, max_bottom);
 		}
 
+		setup_monster(wall_across_1.x + (wall_acrossWidthPixels/ 2), wall_across_1.y + 5);
+		setup_monster1(wall_across_2.x + (wall_acrossWidthPixels/ 2), wall_across_2.y - 8);
+		setup_monster2(wall_across_3.x + (wall_acrossWidthPixels/ 2), wall_across_3.y + 5);
+		setup_monster3(rand_number(max_left, max_right), border_bottom.y - 8);		
 	}
 }
 
@@ -336,6 +353,11 @@ void draw_level(int level) {
 	    sprite_draw(&door);
 	    sprite_draw(&key);
 	    sprite_draw(&player);
+
+	    sprite_draw(&monster);
+	    sprite_draw(&monster1);
+	    sprite_draw(&monster2);
+	    sprite_draw(&monster3);
 
 	}
 

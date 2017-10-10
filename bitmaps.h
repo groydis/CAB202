@@ -87,12 +87,6 @@ unsigned char doorBitmaps[] =
 };
 
 
-
-#define doorWidthPixels 18
-#define doorHeightPixels 18
-
-
-
 unsigned char keyBitmaps[] =
 {
 	0b11100000, // ###    
