@@ -45,6 +45,7 @@ bool collision(Sprite spriteOne, Sprite spriteTwo) {
 	return false;
 }
 
+
 void draw_double(uint8_t x, uint8_t y, double time, double minutes, colour_t colour) {
     snprintf(buffer, sizeof(buffer), "Time: %02.0f:%02.0f", minutes, time);
     draw_string(x, y, buffer, colour);

@@ -9,10 +9,9 @@
 #include <sprite.h>
 
 #include "helpers.h"
+#include "bitmaps.h"
 #include "timer.h"
 #include "lcd_model.h"
-#include "movement.h"
-#include "levels.h"
 
 bool main_menu_enabled = false;
 bool game_running = false;
@@ -28,19 +27,624 @@ char *flr_msg = "Floor: %02d";
 char *lives_msg = "Lives: %02d";
 char *score_msg = "Score: %02d";
 
-Sprite the_monsters[4];
-Sprite the_walls[6];
+typedef struct 
+{
+    int x;
+    int y;
 
-void turnOnLed0( void ) {
-    //  (d) Set pin 2 of the Port B output register. No other pins should be 
-    //  affected. 
-    SET_BIT(PORTB, 2);
+} Location;
+
+#define NUM_OF_MONSTERS 4
+#define NUM_OF_WALLS_ACROSS 3
+#define NUM_OF_WALLS_DOWN 3
+
+Sprite player;
+Sprite monster[NUM_OF_MONSTERS];
+Sprite key;
+Sprite door;
+Sprite tower;
+
+//Sprite shield;
+//Sprite bomb;
+//Sprite bowarrow;
+
+Sprite border_top;
+Sprite border_left;
+Sprite border_right;
+Sprite border_bottom;
+
+Sprite wall_down[NUM_OF_WALLS_DOWN];
+
+Sprite wall_across[NUM_OF_WALLS_ACROSS];
+
+int rand_number( int min, int max)
+{
+	//srand(overflow_counter);
+   	return rand() % (min - max + 1) + min;
 }
 
-void turnOffLed0( void ) {
-    //  (e) Clear pin 2 of the Port B output register. No other pins should be
-    //  affected.
-    CLEAR_BIT(PORTB, 2);
+void init_level_sprites () {
+		sprite_init(&player, (LCD_X / 2) - playerWidthPixels / 2, (LCD_Y / 2), playerWidthPixels, playerHeightPixels, playerBitmaps);
+	    
+	    for (int i = 0; i < NUM_OF_MONSTERS; i++) {
+	    	sprite_init(&monster[i], -10000, 0, monsterWidthPixels, monsterHeightPixels, monsterBitmaps);
+	    }
+		sprite_init(&key, 0, 0, keyWidthPixels, keyHeightPixels, keyBitmaps);
+		sprite_init(&door, 0, 0, doorWidthPixels, doorHeightPixels, doorBitmaps);
+		
+		sprite_init(&tower, (LCD_X / 2) - towerWidthPixels / 2, -12, towerWidthPixels, towerHeightPixels, towerBitmaps);
+		// BORDERS
+		sprite_init(&border_top, -21, -12, top_bottom_wallWidthPixels, top_bottom_wallHeightPixels, top_bottom_wallBitmaps);
+		sprite_init(&border_left, -21, -36, left_right_wallWidthPixels, left_right_wallHeightPixels, left_right_wallBitmaps);
+		sprite_init(&border_right, LCD_X + 21 - left_right_wallWidthPixels, -36, left_right_wallWidthPixels, left_right_wallHeightPixels, left_right_wallBitmaps);
+		sprite_init(&border_bottom, -21, LCD_Y + 12, top_bottom_wallWidthPixels, top_bottom_wallHeightPixels, top_bottom_wallBitmaps);
+
+		// WALLS FOR MAZE
+		for (int i = 0; i < NUM_OF_WALLS_ACROSS; i++) {
+			sprite_init(&wall_across[i], -10000, 0, wall_acrossWidthPixels, wall_acrossHeightPixels, wall_acrossBitmaps);
+
+		}
+		for (int i = 0; i < NUM_OF_WALLS_DOWN; i++) {
+			sprite_init(&wall_down[i], -10000, 0, wall_downWidthPixels, wall_downHeightPixels, wall_downBitmaps);
+		}
+}
+
+Location random_door_location(int floor) {
+
+	Location door_floor_0;
+	Location door_floor_1;
+	Location door_floor_2;
+	Location door_floor_3;
+
+	if (floor > 0) {
+		door_floor_0.x = -21 + left_right_wallWidthPixels + 2;
+		door_floor_0.y = -12 + top_bottom_wallHeightPixels +  2;
+
+		door_floor_1.x = (LCD_X + 21) - door.width  - 4;
+		door_floor_1.y = -12 + top_bottom_wallHeightPixels + 2;
+
+		door_floor_2.x = -21 + left_right_wallWidthPixels +  2;
+		door_floor_2.y = (LCD_Y + 12) - door.height - 2;
+
+		door_floor_3.x = (LCD_X + 21) - door.width - 4;
+		door_floor_3.y = (LCD_Y + 12) - door.height - 2;
+
+
+		Location door_locations[4] = {door_floor_0, door_floor_1, door_floor_2, door_floor_3};
+
+		return door_locations[rand_number(0,4)];
+
+	}
+
+	door_floor_0.x = (LCD_X / 2) - (doorWidthPixels / 2) + 3;
+	door_floor_0.y = (towerHeightPixels - doorHeightPixels) - 12;
+	return door_floor_0;
+}
+
+Location random_key_location(int floor) {
+
+	Location key_floor_0;
+	Location key_floor_1;
+	Location key_floor_2;
+	Location key_floor_3;
+
+	if (floor > 0) {
+		key_floor_0.x = LCD_X / 2;
+		key_floor_0.y = -5;
+
+		key_floor_1.x = LCD_X + 5;
+		key_floor_1.y = LCD_Y / 2;
+
+		key_floor_2.x = LCD_X / 2;
+		key_floor_2.y = LCD_Y + 5;
+
+		key_floor_3.x = -5;
+		key_floor_3.y = LCD_Y / 2;
+
+		Location key_locations[4] = {key_floor_0, key_floor_1, key_floor_2, key_floor_3};
+
+		return key_locations[rand_number(0,4)];
+
+	}
+
+	key_floor_0.x = -10;
+	key_floor_0.y = 0;
+	return key_floor_0;
+}
+
+void load_level(int level) {
+	if (level == 0) {
+		Location door_loc = random_door_location(level);
+		Location key_loc = random_key_location(level);
+
+		player.x = (LCD_X / 2) - playerWidthPixels / 2;
+		player.y = (LCD_Y / 2);
+
+		key.x = key_loc.x;
+		key.y = key_loc.y;
+		door.x = door_loc.x;
+		door.y = door_loc.y;
+
+		monster[0].x = (LCD_X + 10) - monsterWidthPixels - 2;
+		monster[0].y = 0;
+				
+		border_top.x = -21;
+		border_top.y = -12;
+
+		border_left.x = -21;
+		border_left.y = -36;
+
+		border_right.x = LCD_X + 21 - left_right_wallWidthPixels;
+		border_right.y = - 36;
+
+		border_bottom.x = -21;
+		border_bottom.y = LCD_Y + 12;
+
+	} else {
+		Location door_loc = random_door_location(level);
+		Location key_loc = random_key_location(level);
+
+		player.x = (LCD_X / 2) - playerWidthPixels / 2;
+		player.y = (LCD_Y / 2);
+
+		key.x = key_loc.x;
+		key.y = key_loc.y;
+		door.x = door_loc.x;
+		door.y = door_loc.y;
+
+		border_top.x = -21;
+		border_top.y = -12;
+
+		border_left.x = -21;
+		border_left.y = -36;
+
+		border_right.x = LCD_X + 21 - left_right_wallWidthPixels;
+		border_right.y = - 36;
+
+		border_bottom.x = -21;
+		border_bottom.y = LCD_Y + 12;
+
+		int max_left = border_left.x + border_left.width + 2 + door.width + 2;
+		int max_right = border_right.x - 2 - door.width - 2;
+		int max_top = border_top.y + border_top.height + 2 + door.height + 2;
+		int max_bottom = border_bottom.y - 2 - door.height - 2 - 2;
+
+		int magical_random_map = rand_number(0, 10);
+		if (magical_random_map == 0) {
+			wall_across[0].x = border_left.x + border_left.width;
+			wall_across[0].y = max_top;
+
+			wall_down[0].x = max_left;
+			wall_down[0].y = wall_across[0].y;
+
+			wall_across[1].x = border_right.x - wall_acrossWidthPixels;
+			wall_across[1].y = max_top;
+
+			wall_down[1].x = max_right;
+			wall_down[1].y = wall_across[1].y;
+
+			wall_down[2].x = LCD_X / 2;
+			wall_down[2].y = border_top.y + border_top.height;
+
+			wall_across[2].x = wall_down[0].x;
+			wall_across[2].y = wall_down[0].y + wall_downHeightPixels;
+		} else if (magical_random_map == 1) {
+			wall_across[0].x = border_left.x + border_left.width;
+			wall_across[0].y = max_bottom;
+
+			wall_down[0].x = max_left;
+			wall_down[0].y = wall_across[0].y - wall_downHeightPixels;
+
+			wall_across[1].x = border_right.x - wall_acrossWidthPixels;
+			wall_across[1].y = max_top;
+
+			wall_down[1].x = max_right;
+			wall_down[1].y = wall_across[1].y;
+
+			wall_down[2].x = LCD_X / 2;
+			wall_down[2].y = border_bottom.y - wall_downHeightPixels;
+
+			wall_across[2].x = wall_down[0].x;
+			wall_across[2].y = wall_down[0].y;
+		} else if (magical_random_map == 2) {
+			wall_across[0].x = border_left.x + border_left.width;
+			wall_across[0].y = max_bottom;
+
+			wall_down[0].x = max_left;
+			wall_down[0].y = wall_across[0].y - wall_downHeightPixels;
+
+			wall_across[1].x = border_right.x - wall_acrossWidthPixels;
+			wall_across[1].y = max_top;
+
+			wall_down[1].x = wall_across[1].x;
+			wall_down[1].y = wall_across[1].y;
+
+			wall_down[2].x = LCD_X / 2;
+			wall_down[2].y = border_bottom.y - wall_downHeightPixels;
+
+			wall_across[2].x = wall_down[0].x;
+			wall_across[2].y = wall_down[0].y;
+		} else if (magical_random_map == 3) {
+			wall_across[0].x = border_left.x + border_left.width;
+			wall_across[0].y = max_bottom;
+
+			wall_down[0].x = max_left;
+			wall_down[0].y = wall_across[0].y - wall_downHeightPixels;
+
+			wall_across[1].x = border_right.x - wall_acrossWidthPixels;
+			wall_across[1].y = max_bottom;
+
+			wall_down[1].x = wall_across[1].x;
+			wall_down[1].y = wall_across[1].y - wall_downHeightPixels;
+
+			wall_down[2].x = LCD_X / 2;
+			wall_down[2].y = border_bottom.y - wall_downHeightPixels;
+
+			wall_across[2].x = wall_down[0].x;
+			wall_across[2].y = wall_down[0].y;
+		} else if (magical_random_map == 4) {
+			wall_across[0].x = border_left.x + border_left.width;
+			wall_across[0].y =  max_bottom;
+
+			wall_down[0].x = max_left;
+			wall_down[0].y =  wall_across[0].y - wall_downHeightPixels;
+
+			wall_across[1].x = border_right.x - wall_acrossWidthPixels;
+			wall_across[1].y =  max_bottom;
+
+			wall_down[1].x = wall_across[1].x;
+			wall_down[1].y =  wall_across[1].y - wall_downHeightPixels;
+
+			wall_down[2].x = LCD_X / 2;
+			wall_down[2].y =  border_bottom.y - wall_downHeightPixels;
+
+			wall_across[2].x = wall_down[1].x - wall_acrossWidthPixels;
+			wall_across[2].y =  wall_down[1].y;
+		} else if (magical_random_map == 5) {
+			wall_down[0].x = max_left;
+			wall_down[0].y = border_top.y + border_top.height;
+
+			wall_across[0].x = wall_down[0].x;
+			wall_across[0].y = wall_down[0].y + wall_downHeightPixels;
+
+			wall_down[1].x = max_left;
+			wall_down[1].y = border_bottom.y - wall_downHeightPixels;
+
+			wall_across[1].x = wall_down[1].x;
+			wall_across[1].y = wall_down[1].y;
+
+			wall_down[2].x = max_right - wall_downWidthPixels;
+			wall_down[2].y = border_top.y + border_top.height;
+
+			wall_across[2].x = border_right.x - wall_acrossWidthPixels;
+			wall_across[2].y = max_bottom;
+		} else if (magical_random_map == 6) {
+			wall_across[0].x = border_left.x + border_left.width;
+			wall_across[0].y =  max_bottom;
+
+			wall_down[0].x = max_left;
+			wall_down[0].y =  wall_across[0].y - wall_downHeightPixels;
+
+			wall_across[1].x = border_right.x - wall_acrossWidthPixels;
+			wall_across[1].y =  max_top;
+
+			wall_down[1].x = wall_across[0].x + wall_acrossWidthPixels - 3;
+			wall_down[1].y =  wall_across[1].y;
+
+			wall_down[2].x = LCD_X /2;
+			wall_down[2].y =  border_top.y + border_top.height;
+
+			wall_across[2].x = border_right.x - wall_acrossWidthPixels;
+			wall_across[2].y =  max_bottom;
+		} else if (magical_random_map == 7) {
+			wall_across[0].x = border_left.x + border_left.width;
+			wall_across[0].y =  max_bottom;
+
+			wall_down[0].x = LCD_X / 2;
+			wall_down[0].y =  border_top.y + border_top.height;
+
+			wall_across[1].x = border_right.x - wall_acrossWidthPixels;
+			wall_across[1].y =  max_bottom;
+
+			wall_down[1].x = wall_across[1].x;
+			wall_down[1].y =  wall_across[1].y - wall_downHeightPixels;
+
+			wall_down[2].x = max_right;
+			wall_down[2].y =  wall_across[1].y - wall_downHeightPixels;
+
+			wall_across[2].x = border_left.x + border_left.width;
+			wall_across[2].y =  max_top;
+		} else if (magical_random_map == 8) {
+			wall_across[0].x = border_left.x + border_left.width;
+			wall_across[0].y = max_bottom;
+
+			wall_down[0].x = LCD_X / 2;
+			wall_down[0].y = border_bottom.y - wall_downHeightPixels;
+
+			wall_across[1].x = border_right.x - wall_acrossWidthPixels;
+			wall_across[1].y = max_top;
+
+			wall_down[1].x = wall_across[1].x;
+			wall_down[1].y = wall_across[1].y;
+
+			wall_down[2].x = max_right;
+			wall_down[2].y = wall_across[1].y;
+
+			wall_across[2].x = border_left.x + border_left.width;
+			wall_across[2].y = max_top;
+		} else if (magical_random_map == 9) {
+			wall_across[0].x = border_left.x + border_left.width;
+			wall_across[0].y = max_top;
+
+			wall_down[0].x = max_left;
+			wall_down[0].y = wall_across[0].y;
+
+			wall_across[1].x = border_right.x - wall_acrossWidthPixels;
+			wall_across[1].y = max_top;
+
+			wall_down[1].x = wall_across[0].x + wall_acrossWidthPixels - 3;
+			wall_down[1].y = wall_across[1].y;
+
+			wall_down[2].x = LCD_X /2;
+			wall_down[2].y = border_top.y + border_top.height;
+
+			wall_across[2].x = border_right.x - wall_acrossWidthPixels;
+			wall_across[2].y = max_bottom;
+		}
+
+		monster[0].x = wall_across[0].x + (wall_acrossWidthPixels/ 2);
+		monster[0].y = wall_across[0].y + 5;
+
+		monster[1].x = wall_across[1].x + (wall_acrossWidthPixels/ 2);
+		monster[1].y = wall_across[1].y - 8;
+
+		monster[2].x = wall_across[2].x + (wall_acrossWidthPixels/ 2);
+		monster[2].y = wall_across[2].y + 5;
+
+		monster[3].x = rand_number(max_left, max_right);
+		monster[3].y = border_bottom.y - 8;		
+	}
+}
+
+void draw_level(int level) {
+	if (level == 0) {
+
+	    sprite_draw(&tower);
+	    sprite_draw(&door);
+	    sprite_draw(&border_top);
+	    sprite_draw(&border_left);
+	    sprite_draw(&border_right);
+	    sprite_draw(&border_bottom);
+
+	   	sprite_draw(&player);
+	    sprite_draw(&monster[0]);
+	    sprite_draw(&key);
+
+	} else {
+
+		sprite_draw(&border_top);
+	    sprite_draw(&border_left);
+	    sprite_draw(&border_right);
+	    sprite_draw(&border_bottom);
+
+	   	for (int i = 0; i < NUM_OF_WALLS_DOWN; i++) {
+	    	sprite_draw(&wall_down[i]);
+		}
+
+	   	for (int i = 0; i < NUM_OF_WALLS_ACROSS; i++) {
+	    	sprite_draw(&wall_across[i]);
+		}
+
+	    sprite_draw(&door);
+	    sprite_draw(&key);
+	    sprite_draw(&player);
+
+	    for (int i = 0; i < NUM_OF_MONSTERS; i++) {
+	    	sprite_draw(&monster[i]);
+		}
+
+	}
+}
+
+bool nearBottom (void) {
+	if (border_bottom.y == LCD_Y - 2 && BIT_IS_SET(PINB, 7)) {
+		return true;
+	}
+	return false;
+}
+
+bool nearTop( void ) {
+	if (border_top.y + border_top.height == 2 && BIT_IS_SET(PIND, 1)) {
+		return true;
+	}
+	return false;
+}
+
+bool nearLeft ( void ) {
+	if (border_left.x + border_left.width == 2 && BIT_IS_SET(PINB, 1)) {
+		return true;
+	}
+	return false;
+}
+
+bool nearRight ( void ) {
+	if (border_right.x == LCD_X - 2 && BIT_IS_SET(PIND, 0)) {
+		return true;
+	}
+	return false;
+}
+
+void movement( int level, bool hasKey ) {
+	if (BIT_IS_SET(PIND, 1) && collision(player, border_top) == false) {
+
+		if (nearTop() || nearBottom() || player.y != LCD_Y / 2) {
+			
+			player.y--;
+			if (hasKey) {
+				key.y = player.y + player.height;
+				key.x = player.x - key.width;
+			}
+
+		} else {
+			if (hasKey) {
+				key.y = player.y + player.height;
+				key.x = player.x - key.width;
+			} else {
+				key.y++;
+			}
+			door.y++;
+
+			border_top.y++;
+			border_left.y++;
+			border_right.y++;
+			border_bottom.y++;
+
+			if (level == 0) {
+		    	monster[0].y++;
+		    	tower.y++;
+			} else {
+				for (int i = 0; i < NUM_OF_WALLS_DOWN; i++) {
+					wall_down[i].y++;
+				}
+				for (int i = 0; i < NUM_OF_WALLS_ACROSS; i++) {
+					wall_across[i].y++;
+				}
+				for (int i = 0; i < NUM_OF_MONSTERS; i++) {
+					monster[i].y++;
+				}
+			}
+		}
+	}
+	else if (BIT_IS_SET(PINB, 7) && collision(player, border_bottom) == false) {
+
+		if (nearBottom() || nearTop() || player.y != LCD_Y / 2) {
+			
+			player.y++;
+			if (hasKey) {
+				key.y = player.y + player.height;
+				key.x = player.x - key.width;
+			} 
+
+		} else {
+			if (hasKey) {
+				key.y = player.y + player.height;
+				key.x = player.x - key.width;
+			} else {
+				key.y--;
+			}
+	    	door.y--;
+
+			border_top.y--;
+			border_left.y--;
+			border_right.y--;
+			border_bottom.y--;
+
+			if (level == 0) {
+		    	monster[0].y--;
+		    	tower.y--;
+			} else {
+				for (int i = 0; i < NUM_OF_WALLS_DOWN; i++) {
+					wall_down[i].y--;
+				}
+				for (int i = 0; i < NUM_OF_WALLS_ACROSS; i++) {
+					wall_across[i].y--;
+				}
+				for (int i = 0; i < NUM_OF_MONSTERS; i++) {
+					monster[i].y--;
+				}
+			}
+		}
+	}
+	else if (BIT_IS_SET(PINB, 1) && collision(player, border_left) == false) {
+
+		if (nearLeft() || nearRight() || player.x != (LCD_X / 2) - playerWidthPixels / 2) {
+			
+			player.x--;
+			if (hasKey) {
+				key.y = player.y + player.height;
+				key.x = player.x - key.width;
+			}
+
+		} else {
+			if (hasKey) {
+				key.y = player.y + player.height;
+				key.x = player.x - key.width;
+			} else {
+				key.x++;
+			}
+			door.x++;
+
+			border_top.x++;
+			border_left.x++;
+			border_right.x++;
+			border_bottom.x++;
+
+			if (level == 0) {
+		    	monster[0].x++;
+		    	tower.x++;
+			} else {
+				for (int i = 0; i < NUM_OF_WALLS_DOWN; i++) {
+					wall_down[i].x++;
+				}
+				for (int i = 0; i < NUM_OF_WALLS_ACROSS; i++) {
+					wall_across[i].x++;
+				}
+				for (int i = 0; i < NUM_OF_MONSTERS; i++) {
+					monster[i].x++;
+				}
+			}
+		}
+	}
+
+	else if (BIT_IS_SET(PIND, 0) && collision(player, border_right) == false) {
+
+		if (nearRight() || nearRight() || player.x != (LCD_X / 2) - playerWidthPixels / 2 ) {
+			
+			player.x++;
+			if (hasKey) {
+				key.y = player.y + player.height;
+				key.x = player.x - key.width;
+			}
+
+		} else {
+			if (hasKey) {
+				key.y = player.y + player.height;
+				key.x = player.x - key.width;
+			} else {
+				key.x--;
+			}
+	    	door.x--;
+
+			border_top.x--;
+			border_left.x--;
+			border_right.x--;
+			border_bottom.x--;
+
+			if (level == 0) {
+		    	monster[0].x--;
+		    	tower.x--;
+			} else {
+				for (int i = 0; i < NUM_OF_WALLS_DOWN; i++) {
+					wall_down[i].x--;
+				}
+				for (int i = 0; i < NUM_OF_WALLS_ACROSS; i++) {
+					wall_across[i].x--;
+				}
+				for (int i = 0; i < NUM_OF_MONSTERS; i++) {
+					monster[i].x--;
+				}
+			}
+		}
+	}
+}
+
+void move_sprites( int current_floor, bool hasKey ) {
+	if (current_floor == 0) {
+    	movement(current_floor, hasKey);
+	} else {
+		movement(current_floor, hasKey);
+	}
+	draw_level(current_floor);
 }
 
 bool paused () {
@@ -82,19 +686,7 @@ void show_loading_screen() {
 	show_screen();
 	load_level(current_floor);
 
-	_delay_ms(1000);
-
-	the_walls[0] = wall_across_1;
-	the_walls[1] = wall_across_2;
-	the_walls[2] = wall_across_3;
-	the_walls[3] = wall_down_1;
-	the_walls[4] = wall_down_2;
-	the_walls[5] = wall_down_3;
-
-	the_monsters[0] = monster;
-	the_monsters[1] = monster1;
-	the_monsters[2] = monster2;
-	the_monsters[3] = monster3;
+	_delay_ms(2000);
 
 	loading = false;
 	hasKey = false;
@@ -161,9 +753,6 @@ void setup() {
     CLEAR_BIT(DDRD, 0);
     CLEAR_BIT(DDRD, 1);
 
-    // LED 
-    SET_BIT(DDRB, 2);
-
 	// BACKLIGHT
     CLEAR_BIT(DDRC, 7);
     SET_BIT(PORTC, 7);
@@ -189,12 +778,8 @@ void setup() {
 	clear_screen();
 
 	show_screen();
-
+	init_level_sprites();
 	main_menu_enabled = true;
-}
-
-void monster_movement (Sprite sprite) {
-
 }
 
 
@@ -208,142 +793,72 @@ void process() {
 		loading = true;
 	}
 	if (current_floor == 0) {
-		if (monster.is_visible) {
-			if (monster.x < player.x){
-		        monster.x += 0.1;
+		if (monster[0].is_visible) {
+			if (monster[0].x < player.x){
+		        monster[0].x += 0.1;
 		    }
-		    if (monster.x > player.x){
-		        monster.x -= 0.1;
+		    if (monster[0].x > player.x){
+		        monster[0].x -= 0.1;
 		    }
-		    if (monster.y < player.y){
-		        monster.y += 0.1;
+		    if (monster[0].y < player.y){
+		        monster[0].y += 0.1;
 		    }
-		    if (monster.y > player.y){
-		        monster.y -= 0.1;
+		    if (monster[0].y > player.y){
+		        monster[0].y -= 0.1;
 		    }
 		}
-		if (collision(monster, tower)) {
-			if (monster.x <= tower.x + tower.width) {
-				monster.x += 0.1;
-			} else if (monster.x + monster.width >= tower.x) {
-				monster.x -= 0.1;
+		if (collision(monster[0], tower)) {
+			if (monster[0].x <= tower.x + tower.width) {
+				monster[0].x += 0.1;
+			} else if (monster[0].x + monster[0].width >= tower.x) {
+				monster[0].x -= 0.1;
 			}
-			if (monster.y <= tower.y + tower.height) {
-				monster.y += 0.1;
-			} else if (monster.y + monster.height >= tower.y) {
-				monster.y -= 0.1;
+			if (monster[0].y <= tower.y + tower.height) {
+				monster[0].y += 0.1;
+			} else if (monster[0].y + monster[0].height >= tower.y) {
+				monster[0].y -= 0.1;
 			}
 		}
 	} else {
-		for (int i = 0; i < 6; i++) {
-			if (monster.is_visible) {
-				if (monster.x < player.x){
-			        monster.x += 0.1;
+		for (int j = 0; j < NUM_OF_MONSTERS; j++) {
+			if (monster[j].is_visible) {
+				if (monster[j].x < player.x){
+			        monster[j].x += 0.1;
 			    }
-			    if (monster.x > player.x){
-			        monster.x -= 0.1;
+			    if (monster[j].x > player.x){
+			        monster[j].x -= 0.1;
 			    }
-			    if (monster.y < player.y){
-			        monster.y += 0.1;
+			    if (monster[j].y < player.y){
+			        monster[j].y += 0.1;
 			    }
-			    if (monster.y > player.y){
-			        monster.y -= 0.1;
+			    if (monster[j].y > player.y){
+			        monster[j].y -= 0.1;
 			    }
-			}				
-			if (collision(monster, the_walls[i])) {
-				if (monster.x <= the_walls[i].x + the_walls[i].width) {
-					monster.x += 0.1;
-				} else if (monster.x + monster.width >= the_walls[i].x) {
-					monster.x -= 0.1;
-				}
-				if (monster.y <= the_walls[i].y + the_walls[i].height) {
-					monster.y += 0.1;
-				} else if (monster.y + monster.height >= the_walls[i].y) {
-					monster.y -= 0.1;
-				}
 			}
-		}
-		for (int i = 0; i < 6; i++) {
-			if (monster1.is_visible) {
-				if (monster1.x < player.x){
-			        monster1.x += 0.1;
-			    }
-			    if (monster1.x > player.x){
-			        monster1.x -= 0.1;
-			    }
-			    if (monster1.y < player.y){
-			        monster1.y += 0.1;
-			    }
-			    if (monster1.y > player.y){
-			        monster1.y -= 0.1;
-			    }
-			}				
-			if (collision(monster1, the_walls[i])) {
-				if (monster1.x <= the_walls[i].x + the_walls[i].width) {
-					monster1.x += 0.1;
-				} else if (monster1.x + monster1.width >= the_walls[i].x) {
-					monster1.x -= 0.1;
+			for (int i = 0; i < 3; i++) {				
+				if (collision(monster[j], wall_across[i])) {
+					if (monster[j].x <= wall_across[i].x + wall_across[i].width) {
+						monster[j].x += 0.1;
+					} else if (monster[j].x + monster[j].width >= wall_across[i].x) {
+						monster[j].x -= 0.1;
+					}
+					if (monster[j].y <= wall_across[i].y + wall_across[i].height) {
+						monster[j].y += 0.1;
+					} else if (monster[j].y + monster[j].height >= wall_across[i].y) {
+						monster[j].y -= 0.1;
+					}
 				}
-				if (monster1.y <= the_walls[i].y + the_walls[i].height) {
-					monster1.y += 0.1;
-				} else if (monster1.y + monster1.height >= the_walls[i].y) {
-					monster1.y -= 0.1;
-				}
-			}
-		}
-		for (int i = 0; i < 6; i++) {
-			if (monster2.is_visible) {
-				if (monster2.x < player.x){
-			        monster2.x += 0.1;
-			    }
-			    if (monster2.x > player.x){
-			        monster2.x -= 0.1;
-			    }
-			    if (monster2.y < player.y){
-			        monster2.y += 0.1;
-			    }
-			    if (monster2.y > player.y){
-			        monster2.y -= 0.1;
-			    }
-			}				
-			if (collision(monster2, the_walls[i])) {
-				if (monster2.x <= the_walls[i].x + the_walls[i].width) {
-					monster2.x += 0.1;
-				} else if (monster2.x + monster2.width >= the_walls[i].x) {
-					monster2.x -= 0.1;
-				}
-				if (monster2.y <= the_walls[i].y + the_walls[i].height) {
-					monster2.y += 0.1;
-				} else if (monster2.y + monster2.height >= the_walls[i].y) {
-					monster2.y -= 0.1;
-				}
-			}
-		}
-		for (int i = 0; i < 6; i++) {
-			if (monster3.is_visible) {
-				if (monster3.x < player.x){
-			        monster3.x += 0.1;
-			    }
-			    if (monster3.x > player.x){
-			        monster3.x -= 0.1;
-			    }
-			    if (monster3.y < player.y){
-			        monster3.y += 0.1;
-			    }
-			    if (monster3.y > player.y){
-			        monster3.y -= 0.1;
-			    }
-			}				
-			if (collision(monster3, the_walls[i])) {
-				if (monster3.x <= the_walls[i].x + the_walls[i].width) {
-					monster3.x += 0.1;
-				} else if (monster3.x + monster3.width >= the_walls[i].x) {
-					monster3.x -= 0.1;
-				}
-				if (monster3.y <= the_walls[i].y + the_walls[i].height) {
-					monster3.y += 0.1;
-				} else if (monster3.y + monster3.height >= the_walls[i].y) {
-					monster3.y -= 0.1;
+				if (collision(monster[j], wall_down[i])) {
+					if (monster[j].x <= wall_down[i].x + wall_down[i].width) {
+						monster[j].x += 0.1;
+					} else if (monster[j].x + monster[j].width >= wall_down[i].x) {
+						monster[j].x -= 0.1;
+					}
+					if (monster[j].y <= wall_down[i].y + wall_down[i].height) {
+						monster[j].y += 0.1;
+					} else if (monster[j].y + monster[j].height >= wall_down[i].y) {
+						monster[j].y -= 0.1;
+					}
 				}
 			}
 		}
