@@ -50,6 +50,11 @@ bool hasShield = false;
 bool hasBowArrow = false;
 bool hasBomb = false;
 
+bool can_move_up = true;
+bool can_move_down = true;
+bool can_move_left = true;
+bool can_move_right = true;
+
 char *flr_msg = "Floor: %02d";
 char *lives_msg = "Lives: %02d";
 char *score_msg = "Score: %02d";
@@ -87,7 +92,7 @@ void show_main_menu( void );
 // ---------------------------------------------------------
 void load_level( void );
 void generate_random_level( void );
-void place_item( Sprite sprite );
+Location place_item( Sprite sprite_to_place );
 Location random_door_location( void );
 
 // ---------------------------------------------------------
@@ -633,6 +638,26 @@ void handle_collision( void ) {
 			usb_serial_send("Player Has Picked Up A Bomb.");
 		}
 	}
+
+
+	for (int i = 0; i < NUM_OF_WALLS_DOWN; i++) {
+		for (int j = 0; j < NUM_OF_WALLS_ACROSS; j++) {
+			if (collision(&player, &wall_down[i]) || collision(&player, &wall_across[j])) {
+				if(collision_direction(&player, &wall_down[i]) == top || collision_direction(&player, &wall_across[j]) == top) {
+					player.y--;
+				}
+				else if(collision_direction(&player, &wall_down[i]) == bottom || collision_direction(&player, &wall_across[j]) == bottom) {
+					player.y++;
+				}
+				else if(collision_direction(&player, &wall_down[i]) == left || collision_direction(&player, &wall_across[j]) == left) {
+					player.x--;
+				}
+				else if(collision_direction(&player, &wall_down[i]) == right || collision_direction(&player, &wall_across[j]) == right) {
+					player.x++;
+				}
+			}
+		}
+	}
 }
 
 // ---------------------------------------------------------
@@ -757,6 +782,7 @@ void show_loading_screen( void ) {
 	clear_screen();
 
 	current_floor++;
+	
 
 	sprintf(score_msg, "Score: %d", player_score);
 	sprintf(flr_msg, "Floor: %d", current_floor);
@@ -767,11 +793,14 @@ void show_loading_screen( void ) {
 
 	show_screen();
 	load_level();
+	hasKey = false;
+	hasBomb = false;
+	hasShield = false;
+	hasBowArrow = false;
 
 	_delay_ms(2000);
 
 	loading = false;
-	hasKey = false;
 }
 
 void show_main_menu( void ) {
@@ -837,7 +866,6 @@ void load_level( void ) {
 
 		border_bottom.x = -21;
 		border_bottom.y = LCD_Y + 12;
-
 	if (current_floor == 0) {
 		key.x = -10;
 		key.y = 0;
@@ -852,77 +880,164 @@ void load_level( void ) {
 	} else {
 		// REMOVE TOWER
 		tower.x = -10000;
+		// RESET ITEMS
+		shield.x = -1000;
+		bowarrow.x = -1000;
+		bomb.x = -1000;
+		key.x = -1000;
 		// RESET ALL TREASURE AND MONSTERS
 		for (int i = 0; i < NUM_OF_MONSTERS; i++) {
-			monster[i].x = -10000;
+			monster[i].x = -1000;
 		}
 		for (int i = 0; i < NUM_OF_TREASURE; i++) {
 			treasure[i].x = -1000;
 		}
 
 		generate_random_level();
-
 	}
 }
 
 void generate_random_level( void ) {
+	int max_left = border_left.x + border_left.width + 2 + door.width + 2;
+	int max_right = border_right.x - 2 - door.width - 2;
+	int max_top = border_top.y + border_top.height + 2 + door.height + 2;
+	int max_bottom = border_bottom.y - 2 - door.height - 2 - 2;
 
 	Location door_loc = random_door_location();
 	door.x = door_loc.x;
 	door.y = door_loc.y;
 
-	place_item(key);
+	wall_across[0].x = border_left.x + border_left.width;
+	wall_down[0].x = random_number(max_left, wall_across[0].x + wall_across[0].width - wall_down[0].width);
+	wall_across[1].x = border_right.x - wall_across[1].width;
+	wall_down[1].x = max_right - wall_down[1].width;
 
-	int amt_treasure = random_number(0, NUM_OF_TREASURE);
-	int amt_monster = random_number(0, NUM_OF_MONSTERS);
+	wall_across[2].x = max_left;
+	wall_down[2].x = LCD_X / 2;
+
+	int rng = random_number(0,4);
+	if (rng >= 2) {
+		wall_across[0].y = max_top;
+		wall_down[0].y = wall_across[0].y + wall_across[0].height;
+
+		wall_across[2].y = wall_down[0].y + wall_down[0].height;
+	} else  {
+		wall_across[0].y = max_bottom;
+		wall_down[0].y = wall_across[0].y - wall_down[0].height;
+
+		wall_across[2].y = wall_down[0].y - wall_across[2].height;
+	}
+	rng = random_number(0,4);
+	if (rng >= 2) {
+		wall_across[1].y = max_bottom;
+		wall_down[1].y = wall_across[1].y - wall_down[1].height;
+	} else  {
+		wall_across[1].y = max_top;
+		wall_down[1].y = wall_across[1].y + wall_across[1].height;
+	}
+	rng = random_number(0,4);
+	if (rng >= 2) {
+		wall_across[2].x = max_left;
+		if (wall_across[0].y == max_top) {
+			wall_across[2].y = wall_down[0].y + wall_down[0].height;
+
+			wall_down[2].y = border_top.y + border_top.height; 
+		} else {
+			wall_across[2].y = wall_down[0].y;
+
+			wall_down[2].y = border_bottom.y - wall_down[2].height;
+		}
+	} else  {
+		wall_across[2].x = max_right - wall_across[2].width;
+		if (wall_across[1].y == max_top) {
+			wall_across[2].y = wall_down[1].y + wall_down[1].height;
+
+			wall_down[2].y = border_top.y + border_top.height; 
+		} else {
+			wall_across[2].y = wall_down[1].y;
+
+			wall_down[2].y = border_bottom.y - wall_down[2].height;
+		}
+	}
+	
+	int amt_treasure = random_number(0, NUM_OF_TREASURE + 1);
+	int amt_monster = random_number(0, NUM_OF_MONSTERS + 1);
+
+	Location key_loc = place_item(key);
+	key.x = key_loc.x;
+	key.y = key_loc.y;
 
 	for (int i = 0; i < amt_treasure; i++) {
-		place_item(treasure[i]);
+		Location treasure_loc = place_item(treasure[i]);
+		treasure[i].x = treasure_loc.x;
+		treasure[i].y = treasure_loc.y;
 	}
-
 	for (int i = 0; i < amt_monster; i++) {
-		place_item(monster[i]);
+		Location monster_loc = place_item(monster[i]);
+		monster[i].x = monster_loc.x;
+		monster[i].y = monster_loc.y;
 	}
 	if (random_number(0,30) <= 10) {
-		shield.x = random_number(border_left.x + border_left.width + shield.width, border_right.x - shield.width - shield.width);
-		shield.y = random_number(border_top.y + border_top.height + shield.height, border_bottom.y - shield.height - shield.height);
+		Location shield_loc = place_item(shield);
+		shield.x = shield_loc.x;
+		shield.y = shield_loc.y;
 	} 
 	if (random_number(0,30) <= 10) {
-		bomb.x = random_number(border_left.x + border_left.width + bomb.width, border_right.x - bomb.width - bomb.width);
-		bomb.y = random_number(border_top.y + border_top.height + bomb.height, border_bottom.y - bomb.height - bomb.height);
+		Location bowarrow_loc = place_item(bowarrow);
+		bowarrow.x = bowarrow_loc.x;
+		bowarrow.y = bowarrow_loc.y;
 	} 
 	if (random_number(0,30) <= 10) {
-		bowarrow.x = random_number(border_left.x + border_left.width + bowarrow.width, border_right.x - bowarrow.width - bowarrow.width);
-		bowarrow.y = random_number(border_top.y + border_top.height + bowarrow.height, border_bottom.y - bowarrow.height - bowarrow.height);
+		Location bomb_loc = place_item(bomb);
+		bomb.x = bomb_loc.x;
+		bomb.y = bomb_loc.y;
 	} 
 
 }
 
-void place_item( Sprite sprite ) {
-	int max_left = border_left.x + border_left.width + 2 + door.width + 2;
-	int max_right = border_right.x - 2 - door.width - 2;
-	int max_top = border_top.y + border_top.height + 2 + door.height + 2;
-	int max_bottom = border_bottom.y - 2 - door.height - 2 - 2;
+Location place_item( Sprite sprite_to_place ) {
+	int max_left = -21 + 6;
+	int max_right = LCD_X + 21 - 6;
+	int max_top = -12 + 6;
+	int max_bottom = LCD_Y - 12 - 6;
 	
-	bool placing_object = true;
-	while( placing_object ) {
-		int collision_count = 0;
-		sprite.x = random_number(max_left, max_right);
-		sprite.y = random_number(max_top, max_bottom);
-		for (int i = 0; i < NUM_OF_WALLS_ACROSS; i++) {
-			for (int j = 0; j < NUM_OF_WALLS_DOWN; j++) {
-				if (collision(&sprite, &wall_across[i]) || 
-					collision(&sprite, &wall_down[j]) || 
-					collision(&sprite, &player) ||
-					collision(&sprite, &door)) {
-					collision_count++;
+	bool placing_object = false;
+
+	Location new_item_location;
+
+	do {
+		placing_object = false;
+
+		sprite_to_place.x = random_number(max_left, max_right);
+		sprite_to_place.y = random_number(max_top, max_bottom);
+
+		usb_serial_send(test_msg);
+		for (int t = 0; t < NUM_OF_TREASURE; t++) {
+			for (int m = 0; m < NUM_OF_MONSTERS; m++) {
+				for (int i = 0; i < NUM_OF_WALLS_ACROSS; i++) {
+					for (int x = 0; x < NUM_OF_WALLS_DOWN; x++) {
+						if (collision(&sprite_to_place, &wall_across[i]) ||
+							collision(&sprite_to_place, &wall_down[i]) ||
+							collision(&sprite_to_place, &player) ||
+							collision(&sprite_to_place, &door) ||
+							collision(&sprite_to_place, &key) ||
+							collision(&sprite_to_place, &treasure[t]) ||
+							collision(&sprite_to_place, &monster[m]) ||
+							collision(&sprite_to_place, &shield) ||
+							collision(&sprite_to_place, &bowarrow) ||
+							collision(&sprite_to_place, &bomb)) {
+
+							placing_object = true;
+						}
+					}
 				}
 			}
 		}
-		if (collision_count == 0) {
-			placing_object = false;
-		}
-	}
+		new_item_location.x = sprite_to_place.x;
+		new_item_location.y = sprite_to_place.y;
+
+	} while( placing_object );
+	return new_item_location;
 } 
 
 Location random_door_location( void ) {
@@ -948,7 +1063,7 @@ Location random_door_location( void ) {
 
 		Location door_locations[4] = {door_floor_0, door_floor_1, door_floor_2, door_floor_3};
 
-		return door_locations[random_number(0,4)];
+		return door_locations[random_number(0,5)];
 
 	}
 
@@ -956,7 +1071,6 @@ Location random_door_location( void ) {
 	door_floor_0.y = (towerHeightPixels - doorHeightPixels) - 12;
 	return door_floor_0;
 }
-
 
 // ---------------------------------------------------------
 //	HELPER FUNCTIONS
@@ -1032,13 +1146,12 @@ bool visability_check(Sprite* sprite_one) {
 }
 
 // ---------------------------------------------------------
-//	Timer overflow business.
+//	Timer overflow stuff.
 // ---------------------------------------------------------
 
 #define FREQ 8000000.0
 #define PRESCALE 256.0
 #define TIMER_SCALE 256.0
-
 
 char buffer[20];
 float minutes = 0;
@@ -1052,7 +1165,7 @@ ISR(TIMER0_OVF_vect) {
 	if ( interval >= 0.5 ) {
 		if (game_running) {
 			//sprintf(debug_msg, "SYS TIME[%f] | Score: %0d | Floor: %0d | Player X/Y: (%.2f/%.2f) | Lives: %0d", get_system_time(), player_score, current_floor, player.x, player.y, player_lives);
-			usb_serial_send(debug_msg); //TODO: NEED TO PUT PROPER INFO IN
+			//usb_serial_send(debug_msg); //TODO: NEED TO PUT PROPER INFO IN
 		}
 		interval = 0;
 	}
@@ -1082,7 +1195,7 @@ void display_time(int x, int y) {
 }
 
 // ---------------------------------------------------------
-//	USB serial business.
+//	USB serial stuff.
 // ---------------------------------------------------------
 
 void usb_serial_send(char * string) {
