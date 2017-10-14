@@ -77,6 +77,35 @@ Sprite border_bottom;
 Sprite wall_down[NUM_OF_WALLS_DOWN];
 Sprite wall_across[NUM_OF_WALLS_ACROSS];
 
+sprite_id all_sprite_store[] = {
+	&monster[0],
+	&monster[1],
+	&monster[2],
+	&monster[3],
+	&monster[4],
+	&key,
+	&door,
+	&tower,
+	&shield,
+	&bomb,
+	&bowarrow,
+	&treasure[0],
+	&treasure[1],
+	&treasure[2],
+	&treasure[3],
+	&treasure[4],
+	&border_top,
+	&border_left,
+	&border_right,
+	&border_bottom,
+	&wall_down[0],
+	&wall_down[1],
+	&wall_down[2],
+	&wall_across[0],
+	&wall_across[1],
+	&wall_across[2]
+};
+
 
 // ---------------------------------------------------------
 //	GAME SCREEN FUNCTIONS
@@ -114,6 +143,11 @@ bool near_bottom( void );
 bool near_top( void );
 bool near_left( void );
 bool near_right( void );
+bool collision_from_top (Sprite sprite_collided);
+bool collision_from_bottom (Sprite sprite_collided);
+bool collision_from_left (Sprite sprite_collided);
+bool collision_from_right (Sprite sprite_collided);
+
 void handle_collision( void );
 // ---------------------------------------------------------
 //	HELPER FUNCTIONS
@@ -219,8 +253,10 @@ void draw_sprites( void ) {
 
 void player_movement( void ) {
 	// UP 
-	if (BIT_IS_SET(PIND, 1) && collision(&player, &border_top) == false) {
-		if (near_top() || near_bottom() || player.y != LCD_Y / 2) {
+	if (BIT_IS_SET(PIND, 1) && collision(&player, &border_top) == false && collision_from_bottom(player) == false) 
+	{
+		if (near_top() || near_bottom() || player.y != LCD_Y / 2) 
+		{
 			
 			player.y--;
 
@@ -240,7 +276,9 @@ void player_movement( void ) {
 				bomb.y = player.y + player.height - 4;
 				bomb.x = player.x + player.width + 2;
 			}
-		} else {
+		} 
+		else 
+		{
 			if (hasKey) {
 				key.y = player.y + player.height;
 				key.x = player.x - key.width;
@@ -286,7 +324,7 @@ void player_movement( void ) {
 		}
 	}
 	// DOWN	
-	else if (BIT_IS_SET(PINB, 7) && collision(&player, &border_bottom) == false) {
+	else if (BIT_IS_SET(PINB, 7) && collision(&player, &border_bottom) == false && collision_from_top(player) == false) {
 
 		if (near_bottom() || near_top() || player.y != LCD_Y / 2) {
 			
@@ -354,7 +392,7 @@ void player_movement( void ) {
 		}
 	}
 	// LEFT
-	else if (BIT_IS_SET(PINB, 1) && collision(&player, &border_left) == false) {
+	else if (BIT_IS_SET(PINB, 1) && collision(&player, &border_left) == false && collision_from_right(player) == false) {
 
 		if (near_left() || near_right() || player.x != (LCD_X / 2) - playerWidthPixels / 2) {
 			
@@ -422,7 +460,7 @@ void player_movement( void ) {
 		}
 	}
 	// RIGHT
-	else if (BIT_IS_SET(PIND, 0) && collision(&player, &border_right) == false) {
+	else if (BIT_IS_SET(PIND, 0) && collision(&player, &border_right) == false && collision_from_left(player) == false) {
 
 		if (near_left() || near_right() || player.x != (LCD_X / 2) - playerWidthPixels / 2 ) {
 			
@@ -537,22 +575,78 @@ bool near_right ( void ) {
 	return false;
 }
 
+bool collision_from_top (Sprite sprite_collided) {
+	for (int i = 0; i < NUM_OF_WALLS_DOWN; i++) {
+		for (int j = 0; j < NUM_OF_WALLS_ACROSS; j++) {
+			if (collision(&sprite_collided, &wall_down[i]) || collision(&sprite_collided, &wall_across[j])) {
+				if(collision_direction(&sprite_collided, &wall_down[i]) == top || collision_direction(&sprite_collided, &wall_across[j]) == top) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+		}
+	}
+	return false;
+}
+bool collision_from_bottom (Sprite sprite_collided) {
+	for (int i = 0; i < NUM_OF_WALLS_DOWN; i++) {
+		for (int j = 0; j < NUM_OF_WALLS_ACROSS; j++) {
+			if (collision(&sprite_collided, &wall_down[i]) || collision(&sprite_collided, &wall_across[j])) {
+				if(collision_direction(&sprite_collided, &wall_down[i]) == bottom || collision_direction(&sprite_collided, &wall_across[j]) == bottom) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+		}
+	}
+	return false;
+}
+bool collision_from_left (Sprite sprite_collided) {
+	for (int i = 0; i < NUM_OF_WALLS_DOWN; i++) {
+		for (int j = 0; j < NUM_OF_WALLS_ACROSS; j++) {
+			if (collision(&sprite_collided, &wall_down[i]) || collision(&sprite_collided, &wall_across[j])) {
+				if(collision_direction(&sprite_collided, &wall_down[i]) == left || collision_direction(&sprite_collided, &wall_across[j]) == left) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+		}
+	}
+	return false;
+}
+bool collision_from_right (Sprite sprite_collided) {
+	for (int i = 0; i < NUM_OF_WALLS_DOWN; i++) {
+		for (int j = 0; j < NUM_OF_WALLS_ACROSS; j++) {
+			if (collision(&sprite_collided, &wall_down[i]) || collision(&sprite_collided, &wall_across[j])) {
+				if(collision_direction(&sprite_collided, &wall_down[i]) == right || collision_direction(&sprite_collided, &wall_across[j]) == right) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+		}
+	}
+	return false;	
+}
 void handle_collision( void ) {
 	for (int x = 0; x < NUM_OF_MONSTERS; x++) {
 		if (visability_check(&monster[x])) {
 			for (int i = 0; i < NUM_OF_WALLS_DOWN; i++) {
 				for (int j = 0; j < NUM_OF_WALLS_ACROSS; j++) {
 					if (collision(&monster[x], &wall_down[i]) || collision(&monster[x], &wall_across[j])) {
-						if(collision_direction(&monster[x], &wall_down[i]) == top || collision_direction(&monster[x], &wall_across[j]) == top) {
+						if (collision_from_top(monster[x])) {
 							monster[x].y--;
 						}
-						if(collision_direction(&monster[x], &wall_down[i]) == bottom || collision_direction(&monster[x], &wall_across[j]) == bottom) {
+						if (collision_from_bottom(monster[x])) {
 							monster[x].y++;
 						}
-						if(collision_direction(&monster[x], &wall_down[i]) == left || collision_direction(&monster[x], &wall_across[j]) == left) {
+						if (collision_from_left(monster[x])) {
 							monster[x].x--;
 						}
-						if(collision_direction(&monster[x], &wall_down[i]) == right || collision_direction(&monster[x], &wall_across[j]) == right) {
+						if (collision_from_right(monster[x])) {
 							monster[x].x++;
 						}
 					}
@@ -636,26 +730,6 @@ void handle_collision( void ) {
 			hasBomb = true;
 			hasBowArrow = false;
 			usb_serial_send("Player Has Picked Up A Bomb.");
-		}
-	}
-
-
-	for (int i = 0; i < NUM_OF_WALLS_DOWN; i++) {
-		for (int j = 0; j < NUM_OF_WALLS_ACROSS; j++) {
-			if (collision(&player, &wall_down[i]) || collision(&player, &wall_across[j])) {
-				if(collision_direction(&player, &wall_down[i]) == top || collision_direction(&player, &wall_across[j]) == top) {
-					player.y--;
-				}
-				else if(collision_direction(&player, &wall_down[i]) == bottom || collision_direction(&player, &wall_across[j]) == bottom) {
-					player.y++;
-				}
-				else if(collision_direction(&player, &wall_down[i]) == left || collision_direction(&player, &wall_across[j]) == left) {
-					player.x--;
-				}
-				else if(collision_direction(&player, &wall_down[i]) == right || collision_direction(&player, &wall_across[j]) == right) {
-					player.x++;
-				}
-			}
 		}
 	}
 }
@@ -1111,7 +1185,7 @@ bool collision(Sprite* sprite_one, Sprite* sprite_two) {
 }
 
 direction collision_direction (Sprite* sprite_one, Sprite* sprite_two) {
-	bool collided = none;
+	direction collided = none;
 	
 	int sprite_one_top = round(sprite_one->y);
 	int sprite_one_left = round(sprite_one->x);
