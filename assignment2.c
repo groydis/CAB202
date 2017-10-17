@@ -1463,7 +1463,6 @@ void usb_serial_send(char * string) {
 }
 
 void setup_usb_serial(void) {
-	// Set up LCD and display message
 	lcd_init(LCD_DEFAULT_CONTRAST);
 	draw_string(10, 10, "Connect USB...", FG_COLOUR);
 	show_screen();
@@ -1471,7 +1470,6 @@ void setup_usb_serial(void) {
 	usb_init();
 
 	while ( !usb_configured() || !usb_serial_get_control()) {
-		// Block until USB is ready.
 	}
 
 	clear_screen();
