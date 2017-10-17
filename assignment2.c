@@ -21,8 +21,6 @@
 #define NUM_OF_WALLS_DOWN 3
 #define MAX_ARROWS 5
 
-#define PI 3.141592653589
-
 #define FREQ 8000000.0
 #define PRESCALE 256.0
 #define TIMER_SCALE 256.0
@@ -1131,7 +1129,7 @@ void respawn_player ( void ) {
 //	COMBAT FUCNTIONS
 // --------------------------------------------------------
 void aim( void ) {
-	if (hasBomb || hasShield) {
+	if (hasBomb) {
 		int right_adc = adc_read(1);
 
 		int line_end_x = player.x + (player.width / 2);
