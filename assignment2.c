@@ -77,6 +77,7 @@ char *lives_msg = "Lives: %02d";
 char *score_msg = "Score: %02d";
 char *debug_msg = "[%f] | Score: %d | Floor: :%d | Player X/Y : (%.2f/%.2f) | Lives: %d";
 
+
 Sprite player;
 Sprite monster[NUM_OF_MONSTERS];
 Sprite key;
@@ -150,7 +151,7 @@ void wait_for_input( void );
 void debug_time_checker( void );
 float current_time( void );
 void display_time( int x, int y );
-float get_system_time( void );
+float system_timer( void );
 float timer ( void );
 // ---------------------------------------------------------
 //	USB SERIAL FUCNTIONS
@@ -1171,7 +1172,7 @@ void throw_bomb (int x, int y) {
 	if (can_throw_bomb) {
 		bomb.x = x - bomb.width / 2;
 		bomb.y = y - bomb.height / 2;
-		time_to_boom = get_system_time() + 2.0;
+		time_to_boom = system_timer() + 2.0;
 		hasBomb = false;
 		bomb_detonated = true;
 		usb_serial_send("Player Has Used The Bomb.");
@@ -1179,7 +1180,7 @@ void throw_bomb (int x, int y) {
 }
 
 void detonate_bomb( void ) {
-	if (get_system_time() > time_to_boom) {
+	if (system_timer() > time_to_boom) {
 		if (bomb_detonated) {
 			SET_BIT(PORTB, 2);
 			SET_BIT(PORTB, 3);
@@ -1286,7 +1287,7 @@ void show_main_menu( void ) {
 	show_screen();
 
 	wait_for_input();
-
+	srand(system_timer());
 	clear_screen();
 	draw_centred(LCD_Y / 2, "3");
 	show_screen();
@@ -1325,7 +1326,6 @@ void draw_centred( unsigned char y, char* string ) {
 }
 
 int random_number( int min, int max) {
-	//srand(overflow_counter);
    	return rand() % (min - max + 1) + min;
 }
 
@@ -1419,16 +1419,16 @@ ISR(TIMER1_OVF_vect) {
 }
 
 void debug_time_checker( void ) {
-	if ((get_system_time() - prev_system_time) > 0.5) {
-		prev_system_time = get_system_time();
+	if ((system_timer() - prev_system_time) > 0.5) {
+		prev_system_time = system_timer();
 		if (game_running && main_menu_enabled == false && game_over == false) {
-			sprintf(debug_msg, "[%f] | Score: %0d | Floor: %0d | Player X/Y: (%.2f/%.2f) | Lives: %0d", get_system_time(), player_score, current_floor, player.x, player.y, player_lives);
+			sprintf(debug_msg, "[%f] | Score: %0d | Floor: %0d | Player X/Y: (%.2f/%.2f) | Lives: %0d", system_timer(), player_score, current_floor, player.x, player.y, player_lives);
 			usb_serial_send(debug_msg);
 		}
 	}
 }
 
-float get_system_time( void ) {
+float system_timer( void ) {
     return (ovf_count * 65536.0 + TCNT1) * 256.0  / FREQ;
 }
 
@@ -1449,7 +1449,6 @@ void display_time(int x, int y) {
 // ---------------------------------------------------------
 //	USB serial stuff.
 // ---------------------------------------------------------
-
 void usb_serial_send(char * string) {
     unsigned char char_count = 0;
     while (*string != '\0') {
