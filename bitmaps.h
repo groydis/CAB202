@@ -1,42 +1,5 @@
 #ifndef BITMAPS_H_
 #define BITMAPS_H_
-
-#define bombWidthPixels 7
-#define bombHeightPixels 7
-
-#define doorWidthPixels 16
-#define doorHeightPixels 16
-
-#define keyWidthPixels 7
-#define keyHeightPixels 3
-
-#define monsterWidthPixels 5
-#define monsterHeightPixels 6
-
-#define playerWidthPixels 7
-#define playerHeightPixels 11
-
-#define shieldWidthPixels 7
-#define shieldHeightPixels 7
-
-#define treasureWidthPixels 7
-#define treasureHeightPixels 7
-
-#define towerWidthPixels 32
-#define towerHeightPixels 32
-
-#define left_right_wallWidthPixels 2
-#define left_right_wallHeightPixels 80
-
-#define top_bottom_wallWidthPixels 126
-#define top_bottom_wallHeightPixels 2
-
-#define wall_acrossWidthPixels 44
-#define wall_acrossHeightPixels 3
-
-#define wall_downWidthPixels 3
-#define wall_downHeightPixels 25
-
  
 unsigned char bombBitmaps[] =
 {
