@@ -117,7 +117,6 @@ void reset_sprites(void);
 void load_level(void);
 void generate_random_level(void);
 location place_item(Sprite sprite_to_place);
-location random_door_location(void);
 // ---------------------------------------------------------
 //	MOVEMENT FUCNTIONS
 // ---------------------------------------------------------
@@ -255,28 +254,24 @@ int main(void) {
 //	SPRITE FUNCTIONS
 // ---------------------------------------------------------
 void initialise_sprites( void ) {
-	sprite_init(&player, -1000, 0, playerWidthPixels, playerHeightPixels, playerBitmaps);
-	sprite_init(&key, -1000, 0, keyWidthPixels, keyHeightPixels, keyBitmaps);
-	sprite_init(&door, -1000, 0, doorWidthPixels, doorHeightPixels, doorBitmaps);
-	sprite_init(&tower, -1000, 0, towerWidthPixels, towerHeightPixels, towerBitmaps);
-	sprite_init(&shield, -1000, 0, shieldWidthPixels, shieldHeightPixels, shieldBitmaps);
-	sprite_init(&bomb, -1000, 0, bombWidthPixels, bombHeightPixels, bombBitmaps);
-	for (int t = 0; t < NUM_OF_TREASURE; t++) {
-		sprite_init(&treasure[t], -1000, 0, treasureWidthPixels, treasureHeightPixels, treasureBitmaps);
-	}
+	sprite_init(&player, 500, 0, playerWidthPixels, playerHeightPixels, playerBitmaps);
+	sprite_init(&key, 500, 0, keyWidthPixels, keyHeightPixels, keyBitmaps);
+	sprite_init(&door, 500, 0, doorWidthPixels, doorHeightPixels, doorBitmaps);
+	sprite_init(&tower, 500, 0, towerWidthPixels, towerHeightPixels, towerBitmaps);
+	sprite_init(&shield, 500, 0, shieldWidthPixels, shieldHeightPixels, shieldBitmaps);
+	sprite_init(&bomb, 500, 0, bombWidthPixels, bombHeightPixels, bombBitmaps);
 	for (int m = 0; m < NUM_OF_MONSTERS; m++) {
-    	sprite_init(&monster[m], -1000, 0, monsterWidthPixels, monsterHeightPixels, monsterBitmaps);
+    	sprite_init(&monster[m], 500, 0, monsterWidthPixels, monsterHeightPixels, monsterBitmaps);
+    	sprite_init(&treasure[m], 500, 0, treasureWidthPixels, treasureHeightPixels, treasureBitmaps);
     }
 	sprite_init(&border_top, -21, -12, top_bottom_wallWidthPixels, top_bottom_wallHeightPixels, top_bottom_wallBitmaps);
 	sprite_init(&border_left, -21, -14, left_right_wallWidthPixels, left_right_wallHeightPixels, left_right_wallBitmaps);
 	sprite_init(&border_right, LCD_X + 21 - left_right_wallWidthPixels, -14, left_right_wallWidthPixels, left_right_wallHeightPixels, left_right_wallBitmaps);
 	sprite_init(&border_bottom, -21, LCD_Y + 12, top_bottom_wallWidthPixels, top_bottom_wallHeightPixels, top_bottom_wallBitmaps);
 	for (int a = 0; a < NUM_OF_WALLS_ACROSS; a++) {
-		sprite_init(&wall_across[a], -1000, 0, wall_acrossWidthPixels, wall_acrossHeightPixels, wall_acrossBitmaps);
+		sprite_init(&wall_across[a], 500, 0, wall_acrossWidthPixels, wall_acrossHeightPixels, wall_acrossBitmaps);
+		sprite_init(&wall_down[a], 500, 0, wall_downWidthPixels, wall_downHeightPixels, wall_downBitmaps);
 
-	}
-	for (int d = 0; d < NUM_OF_WALLS_DOWN; d++) {
-		sprite_init(&wall_down[d], -1000, 0, wall_downWidthPixels, wall_downHeightPixels, wall_downBitmaps);
 	}
 }
 void draw_sprites( void ) {
@@ -288,15 +283,11 @@ void draw_sprites( void ) {
 
 	for (int d = 0; d < NUM_OF_WALLS_DOWN; d++) {
 	   	sprite_draw(&wall_down[d]);
-	}
-	for (int a = 0; a < NUM_OF_WALLS_ACROSS; a++) {
-		sprite_draw(&wall_across[a]);
+	   	sprite_draw(&wall_across[d]);
 	}
 	for (int m = 0; m < NUM_OF_MONSTERS; m++) {
     	sprite_draw(&monster[m]);
-	}
-	for (int t = 0; t < NUM_OF_TREASURE; t++) {
-    	sprite_draw(&treasure[t]);
+    	sprite_draw(&treasure[m]);
 	}
 
 	sprite_draw(&shield);
@@ -393,9 +384,7 @@ void generate_random_level( void ) {
 	int max_right = border_right.x - 2 - doorWidthPixels - 2;
 	int max_top = border_top.y + top_bottom_wallHeightPixels + 2 + doorHeightPixels + 2;
 	int max_bottom = border_bottom.y - 2 - doorHeightPixels - 2 - 2;
-	location door_loc = random_door_location();
-	door.x = door_loc.x;
-	door.y = door_loc.y;
+
 	wall_across[0].x = border_left.x + left_right_wallWidthPixels;
 	wall_down[0].x = random_number(max_left, wall_across[0].x + wall_acrossWidthPixels - wall_downWidthPixels);
 	wall_across[1].x = border_right.x - wall_acrossWidthPixels;
@@ -445,6 +434,11 @@ void generate_random_level( void ) {
 	location key_loc = place_item(key);
 	key.x = key_loc.x;
 	key.y = key_loc.y;
+
+	location door_loc = place_item(door);
+	door.x = door_loc.x;
+	door.y = door_loc.y;
+
 	for (int t = 0; t < amt_treasure; t++) {
 		location treasure_loc = place_item(treasure[t]);
 		treasure[t].x = treasure_loc.x;
@@ -468,72 +462,46 @@ void generate_random_level( void ) {
 }
 
 location place_item( Sprite sprite_to_place ) {
-	int max_left = -21 + 6;
-	int max_right = LCD_X + 21 - 6;
-	int max_top = -12 + 6;
-	int max_bottom = LCD_Y - 12 - 6;
+	int max_left = -21 + 2;
+	int max_right = LCD_X + 21 - 2 - sprite_to_place.width;
+	int max_top = -12 + 2;
+	int max_bottom = LCD_Y - 12 - 2 - sprite_to_place.height;
 	bool placing_object = false;
 	location new_item_location;
 	do {
 		placing_object = false;
 		sprite_to_place.x = random_number(max_left, max_right);
 		sprite_to_place.y = random_number(max_top, max_bottom);
-		for (int t = 0; t < NUM_OF_TREASURE; t++) {
-			for (int m = 0; m < NUM_OF_MONSTERS; m++) {
-				for (int a = 0; a < NUM_OF_WALLS_ACROSS; a++) {
-					for (int d = 0; d < NUM_OF_WALLS_DOWN; d++) {
-						if (collision(&sprite_to_place, &wall_across[a]) ||
-							collision(&sprite_to_place, &wall_down[d]) ||
-							collision(&sprite_to_place, &player) ||
-							collision(&sprite_to_place, &door) ||
-							collision(&sprite_to_place, &key) ||
-							collision(&sprite_to_place, &treasure[t]) ||
-							collision(&sprite_to_place, &monster[m]) ||
-							collision(&sprite_to_place, &shield) ||
-							collision(&sprite_to_place, &bomb)) {
+		for (int m = 0; m < NUM_OF_MONSTERS; m++) {
+			for (int a = 0; a < NUM_OF_WALLS_ACROSS; a++) {
+				if (collision(&sprite_to_place, &wall_across[a]) ||
+					collision(&sprite_to_place, &wall_down[a]) ||
+					collision(&sprite_to_place, &player) ||
+					collision(&sprite_to_place, &door) ||
+					collision(&sprite_to_place, &key) ||
+					collision(&sprite_to_place, &treasure[m]) ||
+					collision(&sprite_to_place, &monster[m]) ||
+					collision(&sprite_to_place, &shield) ||
+					collision(&sprite_to_place, &bomb)) {
 
-							placing_object = true;
-						}
-					}
+					placing_object = true;
+					usb_serial_send("Player Not Spawned");
 				}
 			}
 		}
 		new_item_location.x = sprite_to_place.x;
 		new_item_location.y = sprite_to_place.y;
 	} while( placing_object );
+	usb_serial_send("Player Spawned");
 	return new_item_location;
 } 
-
-location random_door_location( void ) {
-	location door_floor_0;
-	location door_floor_1;
-	location door_floor_2;
-	location door_floor_3;
-	if (current_floor > 0) {
-		door_floor_0.x = -21 + left_right_wallWidthPixels + 2;
-		door_floor_0.y = -12 + top_bottom_wallHeightPixels +  2;
-		door_floor_1.x = (LCD_X + 21) - doorWidthPixels  - 4;
-		door_floor_1.y = -12 + top_bottom_wallHeightPixels + 2;
-		door_floor_2.x = -21 + left_right_wallWidthPixels +  2;
-		door_floor_2.y = (LCD_Y + 12) - doorHeightPixels - 2;
-		door_floor_3.x = (LCD_X + 21) - doorWidthPixels - 4;
-		door_floor_3.y = (LCD_Y + 12) - doorHeightPixels - 2;
-		location door_locations[4] = {door_floor_0, door_floor_1, door_floor_2, door_floor_3};
-		return door_locations[random_number(0,5)];
-	}
-	door_floor_0.x = (LCD_X / 2) - (doorWidthPixels / 2);
-	door_floor_0.y = (towerHeightPixels - doorHeightPixels) - 12;
-	return door_floor_0;
-}
 // ---------------------------------------------------------
 //	MOVEMENT FUNCTIONS
 // ---------------------------------------------------------
 void player_movement( void ) {
 	// UP 
-	if (BIT_IS_SET(PIND, 1) && collision(&player, &border_top) == false && collision_from_bottom(player) == false) 
-	{
-		if (near_top() || near_bottom() || player.y != LCD_Y / 2) 
-		{
+	if (BIT_IS_SET(PIND, 1) && collision(&player, &border_top) == false && collision_from_bottom(player) == false) {
+		if (near_top() || near_bottom() || player.y >= LCD_Y / 2) {
 			player.y--;
 			if (hasKey) {
 				key.y = player.y + playerHeightPixels + 4;
@@ -548,8 +516,7 @@ void player_movement( void ) {
 				bomb.x = player.x + keyWidthPixels + 2;
 			}
 		} 
-		else 
-		{
+		else {
 			if (hasKey) {
 				key.y = player.y + playerHeightPixels + 4;
 				key.x = player.x - keyWidthPixels / 2;
@@ -568,17 +535,13 @@ void player_movement( void ) {
 			} else {
 				bomb.y++;
 			}
-			for (int t = 0; t < NUM_OF_TREASURE; t++) {
-				treasure[t].y++;
-			}
 			for (int d = 0; d < NUM_OF_WALLS_DOWN; d++) {
 				wall_down[d].y++;
-			}
-			for (int a = 0; a < NUM_OF_WALLS_ACROSS; a++) {
-				wall_across[a].y++;
+				wall_across[d].y++;
 			}
 			for (int m = 0; m < NUM_OF_MONSTERS; m++) {
 				monster[m].y++;
+				treasure[m].y++;
 			}
 			tower.y++;
 			door.y++;
@@ -590,7 +553,7 @@ void player_movement( void ) {
 	}
 	// DOWN	
 	else if (BIT_IS_SET(PINB, 7) && collision(&player, &border_bottom) == false && collision_from_top(player) == false) {
-		if (near_bottom() || near_top() || player.y != LCD_Y / 2) {		
+		if (near_bottom() || near_top() || player.y <= LCD_Y / 2) {		
 			player.y++;
 			if (hasKey) {
 				key.y = player.y - keyHeightPixels - 2;
@@ -622,18 +585,14 @@ void player_movement( void ) {
 			} else {
 				bomb.y--;
 			}
-			for (int t = 0; t < NUM_OF_TREASURE; t++) {
-				treasure[t].y--;
-			}
 			for (int d = 0; d < NUM_OF_WALLS_DOWN; d++) {
 				wall_down[d].y--;
-			}
-			for (int a = 0; a < NUM_OF_WALLS_ACROSS; a++) {
-				wall_across[a].y--;
+				wall_across[d].y--;
 			}
 			for (int m = 0; m < NUM_OF_MONSTERS; m++) {
 				monster[m].y--;
-			}
+				treasure[m].y--;
+			} 
 			tower.y--;
 			door.y--;
 			border_top.y--;
@@ -644,7 +603,7 @@ void player_movement( void ) {
 	}
 	// LEFT
 	else if (BIT_IS_SET(PINB, 1) && collision(&player, &border_left) == false && collision_from_right(player) == false) {
-		if (near_left() || near_right() || player.x != (LCD_X / 2) - playerWidthPixels / 2) {
+		if (near_left() || near_right() || player.x >= (LCD_X / 2) - playerWidthPixels / 2) {
 			player.x--;
 			if (hasKey) {
 				key.y = player.y + playerHeightPixels - 2;
@@ -678,17 +637,13 @@ void player_movement( void ) {
 			} else {
 				bomb.x++;
 			}
-			for (int t = 0; t < NUM_OF_TREASURE; t++) {
-				treasure[t].x++;
-			}
 			for (int d = 0; d < NUM_OF_WALLS_DOWN; d++) {
 				wall_down[d].x++;
-			}
-			for (int a = 0; a < NUM_OF_WALLS_ACROSS; a++) {
-				wall_across[a].x++;
+				wall_across[d].x++;
 			}
 			for (int m = 0; m < NUM_OF_MONSTERS; m++) {
 				monster[m].x++;
+				treasure[m].x++;
 			}
 			tower.x++;
 			door.x++;
@@ -700,7 +655,7 @@ void player_movement( void ) {
 	}
 	// RIGHT
 	else if (BIT_IS_SET(PIND, 0) && collision(&player, &border_right) == false && collision_from_left(player) == false) {
-		if (near_left() || near_right() || player.x != (LCD_X / 2) - playerWidthPixels / 2 ) {
+		if (near_left() || near_right() || player.x <= (LCD_X / 2) - playerWidthPixels / 2 ) {
 			player.x++;
 			if (hasKey) {
 				key.y = player.y + playerHeightPixels - 2;
@@ -733,17 +688,13 @@ void player_movement( void ) {
 			} else {
 				bomb.x--;
 			}
-			for (int t = 0; t < NUM_OF_TREASURE; t++) {
-				treasure[t].x--;
-			}
 			for (int d = 0; d < NUM_OF_WALLS_DOWN; d++) {
 				wall_down[d].x--;
-			}
-			for (int a = 0; a < NUM_OF_WALLS_ACROSS; a++) {
-				wall_across[a].x--;
+				wall_across[d].x--;
 			}
 			for (int m = 0; m < NUM_OF_MONSTERS; m++) {
 				monster[m].x--;
+				treasure[m].x--;
 			}
 			tower.x--;
 			door.x--;
@@ -797,56 +748,48 @@ bool near_right ( void ) {
 	return false;
 }
 bool collision_from_top (Sprite sprite_collided) {
-	for (int d = 0; d < NUM_OF_WALLS_DOWN; d++) {
-		for (int a = 0; a < NUM_OF_WALLS_ACROSS; a++) {
-			if (collision(&sprite_collided, &wall_down[d]) || collision(&sprite_collided, &wall_across[a])) {
-				if(collision_direction(&sprite_collided, &wall_down[d]) == top || collision_direction(&sprite_collided, &wall_across[a]) == top) {
-					return true;
-				} else {
-					return false;
-				}
+	for (int a = 0; a < NUM_OF_WALLS_ACROSS; a++) {
+		if (collision(&sprite_collided, &wall_down[a]) || collision(&sprite_collided, &wall_across[a])) {
+			if(collision_direction(&sprite_collided, &wall_down[a]) == top || collision_direction(&sprite_collided, &wall_across[a]) == top) {
+				return true;
+			} else {
+				return false;
 			}
 		}
 	}
 	return false;
 }
 bool collision_from_bottom (Sprite sprite_collided) {
-	for (int d = 0; d < NUM_OF_WALLS_DOWN; d++) {
-		for (int a = 0; a < NUM_OF_WALLS_ACROSS; a++) {
-			if (collision(&sprite_collided, &wall_down[d]) || collision(&sprite_collided, &wall_across[a])) {
-				if(collision_direction(&sprite_collided, &wall_down[d]) == bottom || collision_direction(&sprite_collided, &wall_across[a]) == bottom) {
-					return true;
-				} else {
-					return false;
-				}
+	for (int a = 0; a < NUM_OF_WALLS_ACROSS; a++) {
+		if (collision(&sprite_collided, &wall_down[a]) || collision(&sprite_collided, &wall_across[a])) {
+			if(collision_direction(&sprite_collided, &wall_down[a]) == bottom || collision_direction(&sprite_collided, &wall_across[a]) == bottom) {
+				return true;
+			} else {
+				return false;
 			}
 		}
 	}
 	return false;
 }
 bool collision_from_left (Sprite sprite_collided) {
-	for (int d = 0; d < NUM_OF_WALLS_DOWN; d++) {
-		for (int a = 0; a < NUM_OF_WALLS_ACROSS; a++) {
-			if (collision(&sprite_collided, &wall_down[d]) || collision(&sprite_collided, &wall_across[a])) {
-				if(collision_direction(&sprite_collided, &wall_down[d]) == left || collision_direction(&sprite_collided, &wall_across[a]) == left) {
-					return true;
-				} else {
-					return false;
-				}
+	for (int a = 0; a < NUM_OF_WALLS_ACROSS; a++) {
+		if (collision(&sprite_collided, &wall_down[a]) || collision(&sprite_collided, &wall_across[a])) {
+			if(collision_direction(&sprite_collided, &wall_down[a]) == left || collision_direction(&sprite_collided, &wall_across[a]) == left) {
+				return true;
+			} else {
+				return false;
 			}
 		}
 	}
 	return false;
 }
 bool collision_from_right (Sprite sprite_collided) {
-	for (int d = 0; d < NUM_OF_WALLS_DOWN; d++) {
-		for (int a = 0; a < NUM_OF_WALLS_ACROSS; a++) {
-			if (collision(&sprite_collided, &wall_down[d]) || collision(&sprite_collided, &wall_across[a])) {
-				if(collision_direction(&sprite_collided, &wall_down[d]) == right || collision_direction(&sprite_collided, &wall_across[a]) == right) {
-					return true;
-				} else {
-					return false;
-				}
+	for (int a = 0; a < NUM_OF_WALLS_ACROSS; a++) {
+		if (collision(&sprite_collided, &wall_down[a]) || collision(&sprite_collided, &wall_across[a])) {
+			if(collision_direction(&sprite_collided, &wall_down[a]) == right || collision_direction(&sprite_collided, &wall_across[a]) == right) {
+				return true;
+			} else {
+				return false;
 			}
 		}
 	}
@@ -855,42 +798,26 @@ bool collision_from_right (Sprite sprite_collided) {
 void handle_collision( void ) {
 	for (int m = 0; m < NUM_OF_MONSTERS; m++) {
 		if (visability_check(&monster[m])) {
-			for (int d = 0; d < NUM_OF_WALLS_DOWN; d++) {
-				for (int a = 0; a < NUM_OF_WALLS_ACROSS; a++) {
-					if (collision(&monster[m], &wall_down[d]) || collision(&monster[m], &wall_across[a])) {
-						if (collision_from_top(monster[m])) {
-							monster[m].y--;
-						}
-						if (collision_from_bottom(monster[m])) {
-							monster[m].y++;
-						}
-						if (collision_from_left(monster[m])) {
-							monster[m].x--;
-						}
-						if (collision_from_right(monster[m])) {
-							monster[m].x++;
-						}
+			for (int a = 0; a < NUM_OF_WALLS_ACROSS; a++) {
+				if (collision(&monster[m], &wall_down[a]) || collision(&monster[m], &wall_across[a]) || collision(&monster[m], &tower)) {
+					if (collision_from_top(monster[m])) {
+						monster[m].y--;
 					}
-				}
-			}
-			if (collision(&monster[m], &tower)) {
-				if (collision_direction(&monster[m], &tower) == top) {
-					monster[m].y--;
-				}
-				if (collision_direction(&monster[m], &tower) == bottom) {
-					monster[m].y++;
-				}
-				if (collision_direction(&monster[m], &tower) == left) {
-					monster[m].x--;
-				}
-				if (collision_direction(&monster[m], &tower) == right) {
-					monster[m].x++;
+					if (collision_from_bottom(monster[m])) {
+						monster[m].y++;
+					}
+					if (collision_from_left(monster[m])) {
+						monster[m].x--;
+					}
+					if (collision_from_right(monster[m])) {
+						monster[m].x++;
+					}
 				}
 			}
 			if (collision(&player, &monster[m]) && loading == false && player_respawning == false) {
 				if (hasShield) {
-					shield.x = -1000;
-					monster[m].x = -1000;
+					shield.x = 500;
+					monster[m].x = 500;
 					hasShield = false;
 					usb_serial_send("Player Used A Shield.");
 				} else {
@@ -908,7 +835,6 @@ void handle_collision( void ) {
 				}
 			}
 		}
-
 	}
 	for (int t = 0; t < NUM_OF_TREASURE; t++) {
 		if (visability_check(&treasure[t])) {
@@ -981,17 +907,13 @@ void respawn_player ( void ) {
 			key.x -= dist_from_x;
 			bomb.x -= dist_from_x;
 			shield.x -= dist_from_x;
-			for (int t = 0; t < NUM_OF_TREASURE; t++) {
-				treasure[t].x -= dist_from_x;
-			}
 			for (int m = 0; m < NUM_OF_MONSTERS; m++) {
 				monster[m].x -= dist_from_x;
+				treasure[m].x -= dist_from_x;
 			}
 			for (int a = 0; a < NUM_OF_WALLS_ACROSS; a++) {
 				wall_across[a].x -= dist_from_x;
-			}
-			for (int d = 0; d < NUM_OF_WALLS_DOWN; d++) {
-				wall_down[d].x -= dist_from_x;
+				wall_down[a].x -= dist_from_x;
 			}
 		}
 		if (player.x < LCD_X / 2) {
@@ -1005,19 +927,14 @@ void respawn_player ( void ) {
 			key.x += dist_from_x;
 			bomb.x += dist_from_x;
 			shield.x += dist_from_x;
-			for (int t = 0; t < NUM_OF_TREASURE; t++) {
-				treasure[t].x += dist_from_x;
-			}
 			for (int m = 0; m < NUM_OF_MONSTERS; m++) {
 				monster[m].x += dist_from_x;
+				treasure[m].x += dist_from_x;
 			}
 			for (int a = 0; a < NUM_OF_WALLS_ACROSS; a++) {
 				wall_across[a].x += dist_from_x;
+				wall_down[a].x += dist_from_x;
 			}
-			for (int d = 0; d < NUM_OF_WALLS_DOWN; d++) {
-				wall_down[d].x += dist_from_x;
-			}
-		}
 		if (player.y > LCD_Y / 2) {
 			dist_from_Y = (LCD_Y - border_bottom.y - 2) * -1;
 			tower.y -= dist_from_Y;
@@ -1029,17 +946,13 @@ void respawn_player ( void ) {
 			key.y -= dist_from_Y;
 			bomb.y -= dist_from_Y;
 			shield.y -= dist_from_Y;
-			for (int t = 0; t < NUM_OF_TREASURE; t++) {
-				treasure[t].y -= dist_from_Y;
-			}
 			for (int m = 0; m < NUM_OF_MONSTERS; m++) {
 				monster[m].y -= dist_from_Y;
+				treasure[m].y -= dist_from_Y;
 			}
 			for (int a = 0; a < NUM_OF_WALLS_ACROSS; a++) {
 				wall_across[a].y -= dist_from_Y;
-			}
-			for (int d = 0; d < NUM_OF_WALLS_DOWN; d++) {
-				wall_down[d].y -= dist_from_Y;
+				wall_down[a].y -= dist_from_Y;
 			}
 		}
 		if (player.y < LCD_Y / 2) {
@@ -1053,41 +966,33 @@ void respawn_player ( void ) {
 			key.y += dist_from_Y;
 			bomb.y += dist_from_Y;
 			shield.y += dist_from_Y;
-			for (int t = 0; t < NUM_OF_TREASURE; t++) {
-				treasure[t].y += dist_from_Y;
-			}
 			for (int m = 0; m < NUM_OF_MONSTERS; m++) {
 				monster[m].y += dist_from_Y;
+				treasure[m].y += dist_from_Y;
 			}
 			for (int a = 0; a < NUM_OF_WALLS_ACROSS; a++) {
 				wall_across[a].y += dist_from_Y;
-			}
-			for (int d = 0; d < NUM_OF_WALLS_DOWN; d++) {
-				wall_down[d].y += dist_from_Y;
+				wall_down[a].y += dist_from_Y;
 			}
 		}
+		for (int m = 0; m < NUM_OF_MONSTERS; m++) {
+			for (int d = 0; d < NUM_OF_WALLS_DOWN; d++) {
+				if (collision(&player, &wall_across[d]) ||
+					collision(&player, &wall_down[d]) ||
+					collision(&player, &door) ||
+					collision(&player, &key) ||
+					collision(&player, &treasure[m]) ||
+					collision(&player, &monster[m]) ||
+					collision(&player, &shield) ||
+					collision(&player, &bomb) ||
+					collision(&player, &tower)) {
 
-		for (int t = 0; t < NUM_OF_TREASURE; t++) {
-			for (int m = 0; m < NUM_OF_MONSTERS; m++) {
-				for (int a = 0; a < NUM_OF_WALLS_ACROSS; a++) {
-					for (int d = 0; d < NUM_OF_WALLS_DOWN; d++) {
-						if (collision(&player, &wall_across[a]) ||
-							collision(&player, &wall_down[d]) ||
-							collision(&player, &door) ||
-							collision(&player, &key) ||
-							collision(&player, &treasure[t]) ||
-							collision(&player, &monster[m]) ||
-							collision(&player, &shield) ||
-							collision(&player, &bomb) ||
-							collision(&player, &tower)) {
-
-							placing_player = true;
-						}
-					}
+					placing_player = true;
 				}
 			}
 		}
-	} while( placing_player );
+	}
+	} while(placing_player);
 	player_respawning = false;
 }
 // ---------------------------------------------------------
@@ -1115,21 +1020,18 @@ void aim( void ) {
 
 void throw_bomb (int x, int y) {
 	bool can_throw_bomb = false;
-
-	for (int d = 0; d < NUM_OF_WALLS_DOWN; d++) {
-		for (int a = 0; a < NUM_OF_WALLS_ACROSS; d++) {
-			if (collision(&bomb, &wall_down[d]) ||
-				collision(&bomb, &wall_across[a]) ||
-				collision(&bomb, &border_top) ||
-				collision(&bomb, &border_left) ||
-				collision(&bomb, &border_bottom) ||
-				collision(&bomb, &border_right)) 
-			{	
-				break;
-			} 
-			else {
-				can_throw_bomb = true;
-			}
+	for (int a = 0; a < NUM_OF_WALLS_ACROSS; a++) {
+		if (collision(&bomb, &wall_down[a]) ||
+			collision(&bomb, &wall_across[a]) ||
+			collision(&bomb, &border_top) ||
+			collision(&bomb, &border_left) ||
+			collision(&bomb, &border_bottom) ||
+			collision(&bomb, &border_right)) 
+		{	
+			break;
+		} 
+		else {
+			can_throw_bomb = true;
 		}
 	}
 	if (can_throw_bomb) {
@@ -1159,10 +1061,10 @@ void detonate_bomb( void ) {
 			for (int m = 0; m < NUM_OF_MONSTERS; m++) {
 				if (visability_check(&monster[m])) {
 					player_score += 10;
-					monster[m].x = -10000;
+					monster[m].x = 500;
 				}
 			}
-			bomb.x = -10000;
+			bomb.x = 500;
 			bomb_detonated = false;
 		}
 	}
@@ -1345,16 +1247,6 @@ ISR(TIMER1_OVF_vect) {
     overflow_counter++;
 }
 
-//void debug_time_checker( void ) {
-//	if ((system_timer() - prev_system_time) > 0.5) {
-//		prev_system_time = system_timer();
-//		if (game_running && main_menu_enabled == false && game_over == false) {
-//			sprintf(debug_msg, "[%f] | Score: %0d | Floor: %0d | Player X/Y: (%.2f/%.2f) | Lives: %0d", system_timer(), player_score, current_floor, player.x, player.y, player_lives);
-//			usb_serial_send(debug_msg);
-//		}
-//	}
-//}
-
 float system_timer( void ) {
     return (ovf_count * 65536.0 + TCNT1) * 256.0  / FREQ;
 }
@@ -1386,18 +1278,3 @@ void usb_serial_send(char * string) {
     usb_serial_putchar('\r');
     usb_serial_putchar('\n');
 }
-
-//void setup_usb_serial(void) {
-//	lcd_init(LCD_DEFAULT_CONTRAST);
-//	draw_string(10, 10, "Connect USB...", FG_COLOUR);
-//	show_screen();
-//	usb_init();
-//	while ( !usb_configured() || !usb_serial_get_control()) {
-//	}
-//	clear_screen();
-//	draw_string(10, 10, "USB connected", FG_COLOUR);
-//	show_screen();
-//	usb_serial_send("Welcome to ANSI-TOWER. For CAB202 By Greyden Scott. Student ID: N9935924");
-//	_delay_ms(2000);
-//	usb_serial_send("Game is ready to play.");
-//}
